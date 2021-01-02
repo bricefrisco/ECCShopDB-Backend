@@ -1,5 +1,6 @@
-package com.shopdb.ecocitycraft.shopdb.models.analytics;
+package com.shopdb.ecocitycraft.analytics.models;
 
+import com.shopdb.ecocitycraft.analytics.models.enums.EventType;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 
@@ -7,6 +8,7 @@ import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
 public class EventDTO {
+
     @NotNull
     private EventType eventType;
 

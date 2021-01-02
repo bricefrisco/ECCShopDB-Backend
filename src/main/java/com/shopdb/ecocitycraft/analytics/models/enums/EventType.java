@@ -1,4 +1,4 @@
-package com.shopdb.ecocitycraft.shopdb.models.analytics;
+package com.shopdb.ecocitycraft.analytics.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
