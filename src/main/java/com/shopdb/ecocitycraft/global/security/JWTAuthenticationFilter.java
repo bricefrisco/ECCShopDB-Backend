@@ -7,6 +7,8 @@ import com.shopdb.ecocitycraft.global.exceptions.ExceptionResponse;
 import com.shopdb.ecocitycraft.security.config.JWTConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +24,8 @@ import java.sql.Timestamp;
 import java.util.Collections;
 
 public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
+
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
     private final JWTConfiguration jwtConfig;
@@ -33,9 +37,11 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+        LOGGER.info("Filter being called.");
         String token = request.getHeader(HEADER_STRING);
 
         if (token == null || !token.startsWith(TOKEN_PREFIX)) {
+            LOGGER.info("Token is null");
             chain.doFilter(request, response);
             return;
         }
