@@ -8,7 +8,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,9 +19,6 @@ import java.util.Collections;
 @EnableConfigurationProperties(JWTConfiguration.class)
 public class WebSecurity extends WebSecurityConfigurerAdapter {
     private final JWTConfiguration jwtConfig;
-
-    @Value("${server.servlet.context-path}")
-    private String contextPath;
 
     public WebSecurity(JWTConfiguration jwtConfig) {
         this.jwtConfig = jwtConfig;
@@ -46,23 +42,36 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .antMatcher("/**");
 
+        // Authentication
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/authentication").permitAll();
+
+        // Chest shops
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/chest-shops").permitAll();
+
         http.authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/chest-shops").authenticated()
                 .and()
                 .addFilter(authenticationFilter);
 
-//                .antMatchers(HttpMethod.PUT, contextPath + "/chest-shops").authenticated()
-//                .antMatchers(HttpMethod.DELETE, contextPath + "/chest-shops").authenticated()
-//                .and()
-//                .addFilter(authenticationFilter)
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        // Regions
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/regions").permitAll()
+                .antMatchers(HttpMethod.GET, "/regions/**").permitAll();
 
-//        http.cors().and().csrf().disable().authorizeRequests()
-//                .antMatchers(contextPath + "/authorization/*")
-//                .antMatchers(contextPath + "/")
-//                // .antMatchers("/notes/*").authenticated()
-//                .and()
-//                .addFilter(authenticationFilter)
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/regions").authenticated()
+                .antMatchers(HttpMethod.PUT, "/regions").authenticated()
+                .antMatchers(HttpMethod.PUT, "/regions/**").authenticated();
+
+        // Players
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/players").permitAll()
+                .antMatchers(HttpMethod.GET, "/players/**").permitAll();
+
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/players").authenticated()
+                .antMatchers(HttpMethod.PUT, "/players").authenticated();
     }
 }

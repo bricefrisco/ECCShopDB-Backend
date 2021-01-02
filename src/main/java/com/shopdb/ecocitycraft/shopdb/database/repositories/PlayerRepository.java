@@ -16,9 +16,9 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     Page<Player> findByTowns(Region town, Pageable pageable);
 
-    @Query(value = "SELECT name FROM shopdb2.player ORDER BY name", nativeQuery = true)
+    @Query(value = "SELECT name FROM player ORDER BY name", nativeQuery = true)
     List<String> getPlayerNames();
 
-    @Query(value = "SELECT name FROM shopdb2.player WHERE active = true ORDER BY name", nativeQuery = true)
+    @Query(value = "SELECT name FROM player WHERE active = true ORDER BY name", nativeQuery = true)
     List<String> getActivePlayerNames();
 }
