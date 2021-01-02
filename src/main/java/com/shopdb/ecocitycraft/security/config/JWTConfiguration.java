@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix="jwt")
 public class JWTConfiguration {
+    private String secret;
     private long expirationTime;
     private long refreshExpirationTime;
     private String issuer;
