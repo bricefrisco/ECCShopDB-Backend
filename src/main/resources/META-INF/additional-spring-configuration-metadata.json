@@ -1,0 +1,23 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret passphrase used to encode/decode JWT. This should be a complex and confidential password."
+    },
+    {
+      "name": "jwt.expiration-time",
+      "type": "java.lang.Long",
+      "description": "Expiration time in milliseconds of issued JWT tokens."
+    },
+    {
+      "name": "jwt.issuer",
+      "type": "java.lang.String",
+      "description": "Issuer of JWT."
+    },
+    {
+      "name": "bcrypt.strength",
+      "type": "java.lang.String",
+      "description": "Rounds for bcrypt to hash passwords."
+    }
+  ] }
