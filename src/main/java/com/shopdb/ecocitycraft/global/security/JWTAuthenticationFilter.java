@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,12 +38,15 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        LOGGER.info("Filter being called.");
         String token = request.getHeader(HEADER_STRING);
 
-        if (token == null || !token.startsWith(TOKEN_PREFIX)) {
-            LOGGER.info("Token is null");
+        if (request.getMethod().equals(HttpMethod.GET.name())) {
             chain.doFilter(request, response);
+            return;
+        }
+
+        if (token == null || !token.startsWith(TOKEN_PREFIX)) {
+            sendExceptionResponse("Unauthorized.", response);
             return;
         }
 
@@ -54,13 +58,12 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                     .verify(token.replace("Bearer ", ""))
                     .getSubject();
         } catch (JWTVerificationException ex) {
-            response.getWriter().write(getExceptionResponse(ex.getMessage(), response));
+            sendExceptionResponse(ex.getMessage(), response);
             return;
         }
         
         if (user == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(getExceptionResponse("JWT has no subject", response));
+            sendExceptionResponse("JWT has no subject", response);
             return;
         }
         
@@ -70,10 +73,14 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
         chain.doFilter(request, response);
     }
 
-    private String getExceptionResponse(String message, HttpServletResponse response) throws JsonProcessingException {
+    private void sendExceptionResponse(String message, HttpServletResponse response) throws IOException {
         response.setHeader("Content-Type", "application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
+        response.getWriter().write(getExceptionResponse(message));
+    }
+
+    private String getExceptionResponse(String message) throws JsonProcessingException {
         return new ObjectMapper().writeValueAsString(
                 new ExceptionResponse(
                     new Timestamp(System.currentTimeMillis()),
