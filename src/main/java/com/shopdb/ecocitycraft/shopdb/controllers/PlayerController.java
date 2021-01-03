@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.shopdb.controllers;
 
+import com.shopdb.ecocitycraft.analytics.services.EventService;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.models.players.PaginatedPlayerResponse;
 import com.shopdb.ecocitycraft.shopdb.models.players.PlayerRequest;
@@ -29,15 +30,15 @@ public class PlayerController {
     @Autowired
     private PlayerService playerService;
 
-//    @Autowired
-//    private AnalyticsService analyticsService;
+    @Autowired
+    private EventService eventService;
 
     @GetMapping
     public PaginatedPlayerResponse getPlayers(@Valid @ModelAttribute PlayersParams playersParams) {
         PaginatedPlayerResponse response = playerService.getPlayers(playersParams);
-//        if (!response.getResults().isEmpty()) {
-//            analyticsService.sendPlayerSearchAnalytics(playersParams);
-//        }
+        if (!response.getResults().isEmpty()) {
+            eventService.sendPlayerSearchAnalytics(playersParams);
+        }
         return response;
     }
 
@@ -49,7 +50,7 @@ public class PlayerController {
     @GetMapping("/{name}")
     public PlayerResponse getPlayer(@PathVariable String name) {
         PlayerResponse response = playerService.getPlayer(name);
-//        analyticsService.sendPlayerViewAnalytics(name);
+        eventService.sendPlayerViewAnalytics(name);
         return response;
     }
 
@@ -59,7 +60,7 @@ public class PlayerController {
                                            @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
         PaginatedRegions response = playerService.getPlayerTowns(name, page, pageSize);
-//        analyticsService.sendPlayerRegionsViewAnalytics(name, page);
+        eventService.sendPlayerRegionsViewAnalytics(name, page);
         return response;
     }
 
@@ -69,7 +70,7 @@ public class PlayerController {
                                             @Valid @Min(1) @RequestParam(required = false, defaultValue = "1") int page,
                                             @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize) {
         PaginatedChestShopSigns response = playerService.getPlayerChestShops(name, tradeType, page, pageSize);
-//        analyticsService.sendPlayerChestShopsViewAnalytics(name, tradeType, page);
+        eventService.sendPlayerChestShopsViewAnalytics(name, tradeType, page);
         return response;
     }
 

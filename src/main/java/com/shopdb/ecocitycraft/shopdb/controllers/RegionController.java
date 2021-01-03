@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.shopdb.controllers;
 
+import com.shopdb.ecocitycraft.analytics.services.EventService;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.models.players.PaginatedPlayerResponse;
@@ -28,17 +29,17 @@ public class RegionController {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegionController.class);
 
     @Autowired
-    private RegionService regionService;
+    private EventService eventService;
 
-//    @Autowired
-//    private AnalyticsService analyticsService;
+    @Autowired
+    private RegionService regionService;
 
     @GetMapping
     public PaginatedRegions getAllRegions(@Valid @ModelAttribute RegionsParams regionsParams) {
         PaginatedRegions response = regionService.getRegions(regionsParams);
-//        if (!response.getResults().isEmpty()) {
-//            analyticsService.sendRegionSearchAnalytics(regionsParams);
-//        }
+        if (!response.getResults().isEmpty()) {
+            eventService.sendRegionSearchAnalytics(regionsParams);
+        }
         return regionService.getRegions(regionsParams);
     }
 
@@ -51,9 +52,9 @@ public class RegionController {
     @GetMapping("/{server}/{name}")
     public RegionResponse getRegion(@PathVariable Server server, @PathVariable String name, @RequestParam(required = false, defaultValue = "true") boolean sendAnalytics) {
         RegionResponse response = regionService.getRegion(server, name);
-//        if (sendAnalytics) { // So the bot won't send analytics
-//            analyticsService.sendRegionViewAnalytics(server, name);
-//        }
+        if (sendAnalytics) { // So the bot won't send analytics
+            eventService.sendRegionViewAnalytics(server, name);
+        }
         return response;
     }
 
@@ -65,7 +66,7 @@ public class RegionController {
             @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false) TradeType tradeType) {
         PaginatedChestShopSigns response = regionService.getRegionChestShopSigns(server, name, page, pageSize, tradeType);
-//        analyticsService.sendRegionChestShopsViewAnalytics(server, name, tradeType, page);
+        eventService.sendRegionChestShopsViewAnalytics(server, name, tradeType, page);
         return response;
     }
 
@@ -77,7 +78,7 @@ public class RegionController {
             @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
         PaginatedPlayerResponse response = regionService.getRegionMayors(server, name, page, pageSize);
-//        analyticsService.sendRegionMayorsViewAnalytics(server, name, page);
+        eventService.sendRegionMayorsViewAnalytics(server, name, page);
         return response;
     }
 

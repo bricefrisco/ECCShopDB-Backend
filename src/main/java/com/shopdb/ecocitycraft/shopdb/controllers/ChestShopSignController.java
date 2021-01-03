@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.shopdb.controllers;
 
+import com.shopdb.ecocitycraft.analytics.services.EventService;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
@@ -21,14 +22,17 @@ public class ChestShopSignController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignController.class);
 
     @Autowired
+    private EventService eventService;
+
+    @Autowired
     private ChestShopSignService chestShopSignService;
 
     @GetMapping
     public PaginatedChestShopSigns getChestShopSigns(@Valid @ModelAttribute SignParams signParams) {
         PaginatedChestShopSigns response = chestShopSignService.getSigns(signParams);
-//        if (!response.getResults().isEmpty()) {
-//            analyticsService.sendChestShopSearchAnalytics(signParams);
-//        }
+        if (!response.getResults().isEmpty()) {
+            eventService.sendChestShopSearchAnalytics(signParams);
+        }
         return response;
     }
 

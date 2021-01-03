@@ -7,6 +7,11 @@ import com.shopdb.ecocitycraft.analytics.models.EventDTO;
 import com.shopdb.ecocitycraft.analytics.models.GetEventsParams;
 import com.shopdb.ecocitycraft.analytics.models.PaginatedEventResponse;
 import com.shopdb.ecocitycraft.analytics.models.enums.EventType;
+import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
+import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
+import com.shopdb.ecocitycraft.shopdb.models.players.PlayersParams;
+import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
+import com.shopdb.ecocitycraft.shopdb.models.signs.SignParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +28,7 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
-    public void saveAndBroadcastEvent(EventDTO eventDTO) {
+    public void saveEvent(EventDTO eventDTO) {
         Event event = new Event();
         event.setEventType(eventDTO.getEventType());
         event.setTradeType(eventDTO.getTradeType());
@@ -33,7 +38,7 @@ public class EventService {
         event.setPage(eventDTO.getPage());
         event.setTimestamp(new Timestamp(System.currentTimeMillis()));
         eventRepository.saveAndFlush(event);
-        LOGGER.info("Successfully inserted and broadcast " + event.getEventType().name() + " event.");
+        LOGGER.info("Successfully inserted " + event.getEventType().name() + " event.");
     }
 
     public PaginatedEventResponse getAllEvents(GetEventsParams params) {
@@ -82,6 +87,85 @@ public class EventService {
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), Sort.by("timestamp").descending());
         Page<Event> pageableResults = eventRepository.findAll(EventSpecification.playerEvents(), pageable);
         return mapPages(pageableResults, params.getPage());
+    }
+
+    public void sendChestShopSearchAnalytics(SignParams params) {
+        LOGGER.info("Sending chest shop search analytics");
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.CHEST_SHOPS);
+        event.setPage(params.getPage());
+        event.setTradeType(params.getTradeType());
+        event.setServer(params.getServer());
+        event.setMaterial(params.getMaterial());
+        saveEvent(event);
+    }
+
+    public void sendRegionSearchAnalytics(RegionsParams params) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.REGIONS);
+        event.setPage(params.getPage());
+        event.setName(params.getName());
+        event.setServer(params.getServer());
+        saveEvent(event);
+    }
+
+    public void sendPlayerViewAnalytics(String name) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.PLAYER);
+        event.setName(name);
+        saveEvent(event);
+    }
+
+    public void sendPlayerSearchAnalytics(PlayersParams params) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.PLAYERS);
+        event.setPage(params.getPage());
+        event.setName(params.getName());
+        saveEvent(event);
+    }
+
+    public void sendRegionViewAnalytics(Server server, String name) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.REGION);
+        event.setName(name);
+        event.setServer(server);
+        saveEvent(event);
+    }
+
+    public void sendRegionMayorsViewAnalytics(Server server, String name, int page) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.REGION_PLAYERS);
+        event.setName(name);
+        event.setServer(server);
+        event.setPage(page);
+        saveEvent(event);
+    }
+
+    public void sendRegionChestShopsViewAnalytics(Server server, String name, TradeType tradeType, int page) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.REGION_CHEST_SHOPS);
+        event.setName(name);
+        event.setServer(server);
+        event.setTradeType(tradeType);
+        event.setPage(page);
+        saveEvent( event);
+    }
+
+    public void sendPlayerRegionsViewAnalytics(String name, int page) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.PLAYER_REGIONS);
+        event.setName(name);
+        event.setPage(page);
+        saveEvent(event);
+    }
+
+    public void sendPlayerChestShopsViewAnalytics(String name, TradeType tradeType, int page) {
+        EventDTO event = new EventDTO();
+        event.setEventType(EventType.PLAYER_CHEST_SHOPS);
+        event.setName(name);
+        event.setPage(page);
+        event.setTradeType(tradeType);
+        saveEvent(event);
     }
 
     private PaginatedEventResponse mapPages(Page<Event> pageableResults, int page) {
