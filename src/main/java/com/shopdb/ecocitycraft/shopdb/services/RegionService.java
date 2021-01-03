@@ -103,8 +103,8 @@ public class RegionService implements ErrorReasonConstants {
         Region region = findRegionByServerAndName(request.getServer(), request.getName());
 
         region.setServer(request.getServer());
-        region.setIBounds(request.getIBounds());
-        region.setOBounds(request.getOBounds());
+        region.setIBounds(request.getiBounds());
+        region.setOBounds(request.getoBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
@@ -149,8 +149,8 @@ public class RegionService implements ErrorReasonConstants {
         Region region = new Region();
         region.setName(request.getName().toLowerCase());
         region.setServer(request.getServer());
-        region.setIBounds(request.getIBounds());
-        region.setOBounds(request.getOBounds());
+        region.setIBounds(request.getiBounds());
+        region.setOBounds(request.getoBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
