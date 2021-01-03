@@ -36,7 +36,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getHeader(HEADER_STRING);
 
-        if (request.getMethod().equals(HttpMethod.GET.name())) {
+        if (request.getRequestURI().equals("/api/v3/authentication") || request.getMethod().equals(HttpMethod.GET.name())) {
             chain.doFilter(request, response);
             return;
         }
