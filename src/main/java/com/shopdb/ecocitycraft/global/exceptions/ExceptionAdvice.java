@@ -54,9 +54,8 @@ public class ExceptionAdvice {
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     public ErrorResponse onBindException(BindException ex) {
         List<String> errorList = new ArrayList<>();
-        ex.getBindingResult().getFieldErrors().forEach((fieldError) -> {
-            errorList.add(fieldError.getObjectName() + "." + fieldError.getField() + ": " + fieldError.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach((fieldError) ->
+                errorList.add(fieldError.getObjectName() + "." + fieldError.getField() + ": " + fieldError.getDefaultMessage()));
 
         return new ErrorResponse(new Timestamp(System.currentTimeMillis()),
                 HttpStatus.BAD_REQUEST.value(),
@@ -113,9 +112,8 @@ public class ExceptionAdvice {
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     public ErrorResponse onMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         List<String> errorList = new ArrayList<>();
-        ex.getBindingResult().getFieldErrors().forEach((fieldError) -> {
-            errorList.add(fieldError.getObjectName() + "." + fieldError.getField() + ": " + fieldError.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach((fieldError) ->
+                errorList.add(fieldError.getObjectName() + "." + fieldError.getField() + ": " + fieldError.getDefaultMessage()));
         return new ErrorResponse(new Timestamp(System.currentTimeMillis()),
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),

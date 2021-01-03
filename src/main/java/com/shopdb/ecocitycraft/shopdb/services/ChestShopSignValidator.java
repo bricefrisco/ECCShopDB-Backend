@@ -2,10 +2,8 @@ package com.shopdb.ecocitycraft.shopdb.services;
 
 import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
 import com.shopdb.ecocitycraft.shopdb.models.signs.Prices;
-import com.shopdb.ecocitycraft.shopdb.models.signs.RegexConstants;
+import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
 import com.shopdb.ecocitycraft.shopdb.models.signs.Sign;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +12,6 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public final class ChestShopSignValidator implements RegexConstants {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignValidator.class);
 
     public static Prices parseBuyAndSellSign(String priceLine) {
         Matcher matcher = BUY_SELL_LINE_PATTERN.matcher(priceLine);

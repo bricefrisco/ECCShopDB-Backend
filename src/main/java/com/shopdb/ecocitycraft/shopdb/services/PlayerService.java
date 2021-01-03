@@ -5,7 +5,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.PlayerRepository;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
-import com.shopdb.ecocitycraft.shopdb.models.exceptions.ErrorReasonConstants;
+import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
 import com.shopdb.ecocitycraft.shopdb.models.players.PaginatedPlayerResponse;
 import com.shopdb.ecocitycraft.shopdb.models.players.PlayerRequest;
@@ -13,8 +13,6 @@ import com.shopdb.ecocitycraft.shopdb.models.players.PlayerResponse;
 import com.shopdb.ecocitycraft.shopdb.models.players.PlayersParams;
 import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -27,16 +25,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class PlayerService implements ErrorReasonConstants {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerService.class);
-
-    @Autowired
-    private PlayerRepository playerRepository;
-
-    @Autowired
+    private final PlayerRepository playerRepository;
+    private ChestShopSignService chestShopSignService;
     private RegionService regionService;
 
-    @Autowired
-    private ChestShopSignService chestShopSignService;
+    public PlayerService(PlayerRepository playerRepository) {
+        this.playerRepository = playerRepository;
+    }
 
     public PlayerResponse getPlayer(String name) {
         return mapPlayerResponse(getPlayerByName(name));
@@ -133,10 +128,6 @@ public class PlayerService implements ErrorReasonConstants {
         return player;
     }
 
-    public void saveAndFlush(Player player) {
-        playerRepository.saveAndFlush(player);
-    }
-
     private boolean playerExists(String name) {
         return !(playerRepository.findOneByNameIgnoreCase(name) == null);
     }
@@ -164,5 +155,15 @@ public class PlayerService implements ErrorReasonConstants {
             playerResponse.setActive(player.getActive());
         }
         return playerResponse;
+    }
+
+    @Autowired
+    public void setChestShopSignService(ChestShopSignService chestShopSignService) {
+        this.chestShopSignService = chestShopSignService;
+    }
+
+    @Autowired
+    public void setRegionService(RegionService regionService) {
+        this.regionService = regionService;
     }
 }

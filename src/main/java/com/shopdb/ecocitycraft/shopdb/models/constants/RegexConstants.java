@@ -1,4 +1,4 @@
-package com.shopdb.ecocitycraft.shopdb.models.signs;
+package com.shopdb.ecocitycraft.shopdb.models.constants;
 
 import java.util.regex.Pattern;
 

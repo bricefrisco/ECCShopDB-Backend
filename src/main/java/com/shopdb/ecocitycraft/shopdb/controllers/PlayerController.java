@@ -9,9 +9,6 @@ import com.shopdb.ecocitycraft.shopdb.models.players.PlayersParams;
 import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import com.shopdb.ecocitycraft.shopdb.services.PlayerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,16 +19,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/players")
-@CrossOrigin(origins = "*")
 @Validated
 public class PlayerController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerController.class);
+    private final PlayerService playerService;
+    private final EventService eventService;
 
-    @Autowired
-    private PlayerService playerService;
-
-    @Autowired
-    private EventService eventService;
+    public PlayerController(PlayerService playerService, EventService eventService) {
+        this.playerService = playerService;
+        this.eventService = eventService;
+    }
 
     @GetMapping
     public PaginatedPlayerResponse getPlayers(@Valid @ModelAttribute PlayersParams playersParams) {

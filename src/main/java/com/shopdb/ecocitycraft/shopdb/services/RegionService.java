@@ -6,7 +6,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.RegionRepository;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
-import com.shopdb.ecocitycraft.shopdb.models.exceptions.ErrorReasonConstants;
+import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
 import com.shopdb.ecocitycraft.shopdb.models.players.PaginatedPlayerResponse;
 import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
@@ -14,8 +14,6 @@ import com.shopdb.ecocitycraft.shopdb.models.regions.RegionRequest;
 import com.shopdb.ecocitycraft.shopdb.models.regions.RegionResponse;
 import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -29,16 +27,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class RegionService implements ErrorReasonConstants {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RegionService.class);
-
-    @Autowired
-    private RegionRepository repository;
-
-    @Autowired
+    private final RegionRepository repository;
     private PlayerService playerService;
-
-    @Autowired
     private ChestShopSignService chestShopSignService;
+
+    public RegionService(RegionRepository repository) {
+        this.repository = repository;
+    }
 
     public PaginatedChestShopSigns getRegionChestShopSigns(Server server, String name, int page, int pageSize, TradeType tradeType) {
         Region region = findRegionByServerAndName(server, name);
@@ -192,4 +187,13 @@ public class RegionService implements ErrorReasonConstants {
         return !(repository.findOneByServerAndNameIgnoreCase(server, name) == null);
     }
 
+    @Autowired
+    public void setPlayerService(PlayerService playerService) {
+        this.playerService = playerService;
+    }
+
+    @Autowired
+    public void setChestShopSignService(ChestShopSignService chestShopSignService) {
+        this.chestShopSignService = chestShopSignService;
+    }
 }

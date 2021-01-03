@@ -8,16 +8,13 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.SortBy;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignRepository;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignSpecification;
-import com.shopdb.ecocitycraft.shopdb.models.exceptions.ErrorReasonConstants;
+import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
+import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
 import com.shopdb.ecocitycraft.shopdb.models.signs.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,19 +22,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class ChestShopSignService implements ErrorReasonConstants, RegexConstants {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignService.class);
 
-    @Autowired
-    private ChestShopSignRepository chestShopSignRepository;
-
-    @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
+    private final ChestShopSignRepository chestShopSignRepository;
     private PlayerService playerService;
-
-    @Autowired
     private RegionService regionService;
+
+    public ChestShopSignService(ChestShopSignRepository chestShopSignRepository) {
+        this.chestShopSignRepository = chestShopSignRepository;
+    }
 
     public SignsResponse createSigns(SignsRequest request) {
         Region region = regionService.findRegionByServerAndName(request.getServer(), request.getRegionName());
@@ -132,48 +124,6 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         return result;
     }
 
-    public List<ChestShopSign> getSigns(Region town, TradeType tradeType, boolean filterIdenticalSigns) {
-        ChestShopSign example = new ChestShopSign();
-        example.setTown(town);
-
-        if (tradeType == TradeType.BUY) {
-            example.setBuySign(true);
-        }
-
-        if (tradeType == TradeType.SELL) {
-            example.setSellSign(true);
-        }
-
-        if (filterIdenticalSigns) {
-            example.setDistinct(true);
-        }
-
-        return chestShopSignRepository.findAll(Example.of(example));
-    }
-
-    public List<ChestShopSignDto> getSigns(Player owner, Server server, TradeType tradeType, boolean filterIdenticalSigns) {
-        ChestShopSign example = new ChestShopSign();
-        example.setOwner(owner);
-
-        if (server != null) {
-            example.setServer(server);
-        }
-
-        if (tradeType == TradeType.BUY) {
-            example.setBuySign(true);
-        }
-
-        if (tradeType == TradeType.SELL) {
-            example.setSellSign(true);
-        }
-
-        if (filterIdenticalSigns) {
-            example.setDistinct(true);
-        }
-
-        return mapSigns(chestShopSignRepository.findAll(Example.of(example)));
-    }
-
     public List<String> getChestShopSignMaterialNames(Server server, TradeType tradeType) {
         if (tradeType == null) {
             return getChestShopSignMaterialNames(server);
@@ -230,6 +180,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
     private ChestShopSign mapDTOToSign(List<ChestShopSign> signs, Sign sign, Player owner, Region region) {
         ChestShopSign chestShopSign = new ChestShopSign();
+
         // Basic Info
         chestShopSign.setOwner(owner);
         chestShopSign.setTown(region);
@@ -281,5 +232,13 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         return buyPrice / quantity;
     }
 
+    @Autowired
+    public void setPlayerService(PlayerService playerService) {
+        this.playerService = playerService;
+    }
 
+    @Autowired
+    public void setRegionService(RegionService regionService) {
+        this.regionService = regionService;
+    }
 }

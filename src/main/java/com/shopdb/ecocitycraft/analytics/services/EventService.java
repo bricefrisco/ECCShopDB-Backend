@@ -14,7 +14,6 @@ import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
 import com.shopdb.ecocitycraft.shopdb.models.signs.SignParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +23,11 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
     public static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
+    private final EventRepository eventRepository;
 
-    @Autowired
-    private EventRepository eventRepository;
+    public EventService(EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
+    }
 
     public void saveEvent(EventDTO eventDTO) {
         Event event = new Event();

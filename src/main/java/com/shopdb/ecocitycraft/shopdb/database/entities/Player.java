@@ -100,6 +100,6 @@ public class Player {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Player that = (Player) o;
-        return id == that.id;
+        return id.equals(that.id);
     }
 }

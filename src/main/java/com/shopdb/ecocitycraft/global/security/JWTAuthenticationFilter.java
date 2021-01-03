@@ -25,8 +25,6 @@ import java.sql.Timestamp;
 import java.util.Collections;
 
 public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
-
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
     private final JWTConfiguration jwtConfig;

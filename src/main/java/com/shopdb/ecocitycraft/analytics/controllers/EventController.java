@@ -3,17 +3,18 @@ package com.shopdb.ecocitycraft.analytics.controllers;
 import com.shopdb.ecocitycraft.analytics.models.GetEventsParams;
 import com.shopdb.ecocitycraft.analytics.models.PaginatedEventResponse;
 import com.shopdb.ecocitycraft.analytics.services.EventService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/events")
-@CrossOrigin(origins = "*")
 public class EventController {
-    @Autowired
-    private EventService eventService;
+    private final EventService eventService;
+
+    public EventController(EventService eventService) {
+        this.eventService = eventService;
+    }
 
     @GetMapping("/all")
     public PaginatedEventResponse getAllEvents(@Valid @ModelAttribute GetEventsParams params) {
