@@ -1,35 +1,15 @@
 package com.shopdb.ecocitycraft.shopdb.models.signs;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@ToString
 public class Prices {
     private Double buyPrice;
     private Double sellPrice;
-
-    public Prices(Double buyPrice, Double sellPrice) {
-        this.buyPrice = buyPrice;
-        this.sellPrice = sellPrice;
-    }
-
-    public Double getBuyPrice() {
-        return buyPrice;
-    }
-
-    public Double getSellPrice() {
-        return sellPrice;
-    }
-
-    public void setBuyPrice(Double buyPrice) {
-        this.buyPrice = buyPrice;
-    }
-
-    public void setSellPrice(Double sellPrice) {
-        this.sellPrice = sellPrice;
-    }
-
-    @Override
-    public String toString() {
-        return "Prices{" +
-                "buyPrice=" + buyPrice +
-                ", sellPrice=" + sellPrice +
-                '}';
-    }
 }

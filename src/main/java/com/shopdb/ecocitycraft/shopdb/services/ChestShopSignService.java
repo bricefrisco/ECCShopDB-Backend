@@ -81,11 +81,11 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         example.setTown(region);
 
         if (tradeType == TradeType.BUY) {
-            example.setBuySign(true);
+            example.setIsBuySign(true);
         }
 
         if (tradeType == TradeType.SELL) {
-            example.setSellSign(true);
+            example.setIsSellSign(true);
         }
 
         Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
@@ -105,11 +105,11 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         example.setOwner(player);
 
         if (tradeType == TradeType.BUY) {
-            example.setBuySign(true);
+            example.setIsBuySign(true);
         }
 
         if (tradeType == TradeType.SELL) {
-            example.setSellSign(true);
+            example.setIsSellSign(true);
         }
 
         Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
@@ -203,9 +203,9 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         chestShopSign.setSellPriceEach(determineSellPriceEach(quantityLine.getQuantity(), prices.getSellPrice()));
 
         // Is Buy Sign / Is Sell Sign / Is Unique
-        chestShopSign.setBuySign(prices.getBuyPrice() != null);
-        chestShopSign.setSellSign(prices.getSellPrice() != null);
-        chestShopSign.setDistinct(!signs.contains(chestShopSign));
+        chestShopSign.setIsBuySign(prices.getBuyPrice() != null);
+        chestShopSign.setIsSellSign(prices.getSellPrice() != null);
+        chestShopSign.setIsDistinct(!signs.contains(chestShopSign));
 
         return chestShopSign;
     }

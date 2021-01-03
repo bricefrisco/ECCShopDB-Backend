@@ -3,7 +3,6 @@ package com.shopdb.ecocitycraft.global.exceptions;
 import com.shopdb.ecocitycraft.security.models.exceptions.AuthenticationException;
 import com.shopdb.ecocitycraft.security.models.exceptions.AuthorizationException;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
-import com.shopdb.ecocitycraft.shopdb.models.exceptions.ErrorResponse;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.UnauthorizedException;
 import org.springframework.http.HttpStatus;
@@ -30,20 +29,20 @@ public class ExceptionAdvice {
 
     @ExceptionHandler({AuthenticationException.class, AuthorizationException.class})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ExceptionResponse handleAuthenticationException(Exception ex) {
-        return getExceptionResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ErrorResponse handleAuthenticationException(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionResponse handleResourceNotFoundException(Exception ex) {
-        return getExceptionResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    public ErrorResponse handleResourceNotFoundException(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ExceptionResponse handleException(Exception ex) {
-        return getExceptionResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ErrorResponse handleException(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -139,7 +138,7 @@ public class ExceptionAdvice {
                 ex.getMessage());
     }
 
-    private ExceptionResponse getExceptionResponse(String message, HttpStatus status) {
-        return new ExceptionResponse(new Timestamp(System.currentTimeMillis()), status.value(), status.getReasonPhrase(), message);
+    private ErrorResponse createErrorResponse(String message, HttpStatus status) {
+        return new ErrorResponse(new Timestamp(System.currentTimeMillis()), status.value(), status.getReasonPhrase(), message);
     }
 }

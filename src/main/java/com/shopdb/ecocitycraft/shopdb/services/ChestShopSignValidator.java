@@ -73,9 +73,9 @@ public final class ChestShopSignValidator implements RegexConstants {
     }
 
     private static boolean isInBounds(Sign sign, Region region) {
-        return isBetween(region.getiBounds().getX(), region.getoBounds().getX(), sign.getLocation().getX()) &&
-                isBetween(region.getiBounds().getY(), region.getoBounds().getY(), sign.getLocation().getY()) &&
-                isBetween(region.getiBounds().getZ(), region.getoBounds().getZ(), sign.getLocation().getZ());
+        return isBetween(region.getIBounds().getX(), region.getOBounds().getX(), sign.getLocation().getX()) &&
+                isBetween(region.getIBounds().getY(), region.getOBounds().getY(), sign.getLocation().getY()) &&
+                isBetween(region.getIBounds().getZ(), region.getOBounds().getZ(), sign.getLocation().getZ());
     }
 
     private static boolean isBetween(int s1, int s2, int x) {

@@ -3,12 +3,10 @@ package com.shopdb.ecocitycraft.global.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.shopdb.ecocitycraft.global.exceptions.ExceptionResponse;
+import com.shopdb.ecocitycraft.global.exceptions.ErrorResponse;
 import com.shopdb.ecocitycraft.security.config.JWTConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -80,7 +78,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     private String getExceptionResponse(String message) throws JsonProcessingException {
         return new ObjectMapper().writeValueAsString(
-                new ExceptionResponse(
+                new ErrorResponse(
                     new Timestamp(System.currentTimeMillis()),
                     HttpStatus.UNAUTHORIZED.value(),
                     HttpStatus.UNAUTHORIZED.getReasonPhrase(),

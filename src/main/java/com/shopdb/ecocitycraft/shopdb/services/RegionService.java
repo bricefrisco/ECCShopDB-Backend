@@ -103,8 +103,8 @@ public class RegionService implements ErrorReasonConstants {
         Region region = findRegionByServerAndName(request.getServer(), request.getName());
 
         region.setServer(request.getServer());
-        region.setiBounds(request.getiBounds());
-        region.setoBounds(request.getoBounds());
+        region.setIBounds(request.getIBounds());
+        region.setOBounds(request.getOBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
@@ -149,8 +149,8 @@ public class RegionService implements ErrorReasonConstants {
         Region region = new Region();
         region.setName(request.getName().toLowerCase());
         region.setServer(request.getServer());
-        region.setiBounds(request.getiBounds());
-        region.setoBounds(request.getoBounds());
+        region.setIBounds(request.getIBounds());
+        region.setOBounds(request.getOBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
@@ -168,9 +168,9 @@ public class RegionService implements ErrorReasonConstants {
         response.setId(region.getId());
         response.setName(region.getName());
         response.setServer(region.getServer());
-        response.setiBounds(region.getiBounds());
-        response.setoBounds(region.getoBounds());
-        response.setActive(region.isActive());
+        response.setIBounds(region.getIBounds());
+        response.setOBounds(region.getOBounds());
+        response.setActive(region.getActive());
         response.setMayors(mapMayors(region));
 
         if (region.getChestShopSigns() != null) {
