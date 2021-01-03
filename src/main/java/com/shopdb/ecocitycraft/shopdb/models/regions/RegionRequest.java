@@ -25,4 +25,12 @@ public class RegionRequest {
     @NotNull
     private List<String> mayorNames;
     private boolean active;
+
+    public void setiBounds(Location iBounds) {
+        this.iBounds = iBounds;
+    }
+
+    public void setoBounds(Location oBounds) {
+        this.oBounds = oBounds;
+    }
 }
