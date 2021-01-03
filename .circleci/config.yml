@@ -27,7 +27,7 @@ jobs:
       - run: mvn clean package
 
       # Build docker image
-      - run: docker build -t bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
+      - run: docker build -t bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM .
 
       # Push docker image
       - run: docker push bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
