@@ -33,4 +33,12 @@ public class RegionRequest {
     public void setoBounds(Location oBounds) {
         this.oBounds = oBounds;
     }
+
+    public Location getiBounds() {
+        return iBounds;
+    }
+
+    public Location getoBounds() {
+        return oBounds;
+    }
 }
