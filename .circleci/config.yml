@@ -13,6 +13,9 @@ jobs:
           name: Login to DockerHub
           command: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
 
+      - setup_remote_docker:
+          version: 19.03.13
+
       # Download and cache dependencies
       - restore_cache:
           keys:
