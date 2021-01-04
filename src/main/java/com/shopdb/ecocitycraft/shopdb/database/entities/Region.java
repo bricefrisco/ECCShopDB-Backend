@@ -61,6 +61,7 @@ public class Region {
                 ", iBounds=" + iBounds +
                 ", oBounds=" + oBounds +
                 ", lastUpdated=" + lastUpdated +
+                ", active=" + active +
                 '}';
     }
 

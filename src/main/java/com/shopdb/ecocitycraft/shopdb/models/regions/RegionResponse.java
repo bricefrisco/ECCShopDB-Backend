@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.shopdb.models.regions;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shopdb.ecocitycraft.shopdb.database.entities.embedded.Location;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import lombok.Getter;
@@ -22,11 +23,13 @@ public class RegionResponse {
     @NotBlank
     private Server server;
     @NotNull
+    @JsonProperty("iBounds")
     private Location iBounds;
     @NotNull
+    @JsonProperty("oBounds")
     private Location oBounds;
     @NotNull
-    private boolean active;
+    private Boolean active;
     private List<String> mayors;
     private int numChestShops;
     private Timestamp lastUpdated;
