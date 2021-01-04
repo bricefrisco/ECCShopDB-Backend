@@ -37,11 +37,6 @@ jobs:
           name: Push docker image
           command: docker push bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
 
-      # TODO: Test without this.
-      # - add_ssh_keys:
-      #     fingerprints:
-      #      - "cb:60:be:1c:a7:b9:94:36:5c:5f:6b:ad:d0:a8:20:25"
-
       - run:
           name: Deploy to server
-          command: ssh -o BatchMode=yes -o StrictHostKeyChecking=no $HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend $CIRCLE_BUILD_NUM $DOCKER_ENV_ARGS"
+          command: ssh -o StrictHostKeyChecking=no $HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend $CIRCLE_BUILD_NUM $DOCKER_ENV_ARGS"
