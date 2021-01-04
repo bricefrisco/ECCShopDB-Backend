@@ -103,14 +103,14 @@ public class RegionService implements ErrorReasonConstants {
         Region region = findRegionByServerAndName(request.getServer(), request.getName());
 
         region.setServer(request.getServer());
-        region.setIBounds(request.getiBounds());
-        region.setOBounds(request.getoBounds());
+        region.setIBounds(request.getIBounds());
+        region.setOBounds(request.getOBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
 
-        if (request.isActive()) { // Only update 'active' flag if true, as it defaults to 'false' if it is null.
-            region.setActive(request.isActive());
+        if (request.getActive()) { // Only update 'active' flag if true, as it defaults to 'false' if it is null.
+            region.setActive(request.getActive());
         }
 
         repository.saveAndFlush(region);
@@ -149,13 +149,13 @@ public class RegionService implements ErrorReasonConstants {
         Region region = new Region();
         region.setName(request.getName().toLowerCase());
         region.setServer(request.getServer());
-        region.setIBounds(request.getiBounds());
-        region.setOBounds(request.getoBounds());
+        region.setIBounds(request.getIBounds());
+        region.setOBounds(request.getOBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
 
-        region.setActive(request.isActive());
+        region.setActive(request.getActive());
         return region;
     }
 
