@@ -16,7 +16,6 @@ jobs:
       - setup_remote_docker:
           version: 19.03.13
 
-      # Download and cache dependencies
       - restore_cache:
           keys:
           - application-{{ checksum "pom.xml" }}
@@ -26,11 +25,18 @@ jobs:
             - ~/.m2
           key: application-{{ checksum "pom.xml" }}
 
-      # Package into a JAR
-      - run: mvn clean package
+      - run:
+          name: Package the JAR
+          command: mvn clean package
 
-      # Build docker image
-      - run: docker build -t bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM .
+      - run:
+          name: Build docker image
+          command: docker build -t bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM .
 
-      # Push docker image
-      - run: docker push bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
+      - run:
+          name: Push docker image
+          command: docker push bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
+
+      - run:
+          name: Deploy to server
+          command: ssh -o StrictHostKeyChecking=no $HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend $CIRCLE_BUILD_NUM $DOCKER_ENV_ARGS"
