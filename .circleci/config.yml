@@ -37,9 +37,10 @@ jobs:
           name: Push docker image
           command: docker push bricefrisco/eccshopdb-backend:$CIRCLE_BUILD_NUM
 
-      - add_ssh_keys:
-          fingerprints:
-            - "cb:60:be:1c:a7:b9:94:36:5c:5f:6b:ad:d0:a8:20:25"
+      # TODO: Test without this.
+      # - add_ssh_keys:
+      #     fingerprints:
+      #      - "cb:60:be:1c:a7:b9:94:36:5c:5f:6b:ad:d0:a8:20:25"
 
       - run:
           name: Deploy to server
