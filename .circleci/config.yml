@@ -1,9 +1,9 @@
 version: 2.1
 jobs:
   build:
-    branches:
-      only:
-        - master
+    filters:
+      branches:
+        only: master
 
     docker:
       - image: circleci/openjdk:8-jdk-stretch
