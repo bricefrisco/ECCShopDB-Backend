@@ -1,13 +1,13 @@
 version: 2.1
 
-workflows:
-  version: 2
-  main:
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: master
+#workflows:
+#  version: 2
+#  main:
+#    jobs:
+#      - build:
+#          filters:
+#            branches:
+#              only: master
 
 jobs:
   build:
@@ -34,6 +34,18 @@ jobs:
           paths:
             - ~/.m2
           key: application-{{ checksum "pom.xml" }}
+
+      - run:
+          name: Export key
+          command: echo $BASE64_KEY | base64 -d > key.pem
+
+      - run:
+          name: Export cert
+          command: echo $BASE64_CERT | base64 -d > cert.pem
+
+      - run:
+          name: Convert to PKCS12
+          command: openssl pkcs12 -export -out src/main/resources/key.p12 -inkey key.pem -in cert.pem -passout pass:$PKCS12_PASS
 
       - run:
           name: Package the JAR
