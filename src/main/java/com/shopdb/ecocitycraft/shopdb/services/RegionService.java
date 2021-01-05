@@ -110,7 +110,9 @@ public class RegionService implements ErrorReasonConstants {
         region.setMayors(new ArrayList<>(players.values()));
 
         if (request.getActive()) { // Only update 'active' flag if true, as it defaults to 'false' if it is null.
-            region.setActive(request.getActive());
+            region.setActive(Boolean.TRUE);
+        } else {
+            region.setActive(Boolean.FALSE);
         }
 
         repository.saveAndFlush(region);

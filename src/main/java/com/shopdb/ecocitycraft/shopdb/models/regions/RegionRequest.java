@@ -27,5 +27,5 @@ public class RegionRequest {
     private Location oBounds;
     @NotNull
     private List<String> mayorNames;
-    private Boolean active;
+    private Boolean active = false;
 }
