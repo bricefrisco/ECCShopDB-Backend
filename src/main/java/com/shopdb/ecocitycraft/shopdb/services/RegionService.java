@@ -111,8 +111,6 @@ public class RegionService implements ErrorReasonConstants {
 
         if (request.getActive()) { // Only update 'active' flag if true, as it defaults to 'false' if it is null.
             region.setActive(Boolean.TRUE);
-        } else {
-            region.setActive(Boolean.FALSE);
         }
 
         repository.saveAndFlush(region);
