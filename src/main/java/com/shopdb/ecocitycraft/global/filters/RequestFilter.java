@@ -1,4 +1,4 @@
-package com.shopdb.ecocitycraft.global.security;
+package com.shopdb.ecocitycraft.global.filters;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -7,6 +7,9 @@ import com.shopdb.ecocitycraft.global.exceptions.ErrorResponse;
 import com.shopdb.ecocitycraft.security.config.JWTConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,12 +25,12 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Collections;
 
-public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
+public class RequestFilter extends BasicAuthenticationFilter {
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
     private final JWTConfiguration jwtConfig;
 
-    public JWTAuthenticationFilter(AuthenticationManager authManager, JWTConfiguration jwtConfig) {
+    public RequestFilter(AuthenticationManager authManager, JWTConfiguration jwtConfig) {
         super(authManager);
         this.jwtConfig = jwtConfig;
     }
@@ -35,6 +38,16 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getHeader(HEADER_STRING);
+
+        if (request.getHeader(HttpHeaders.CONTENT_ENCODING) != null && request.getHeader(HttpHeaders.CONTENT_ENCODING).toUpperCase().contains("GZIP") && request.getMethod().equals(HttpMethod.POST.name())) {
+            request = new GzippedInputStreamWrapper(request);
+        }
+
+        // TODO: Testing. Remove this.
+        if (request.getRequestURI().contains("/")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         if (request.getRequestURI().equals("/api/v3/authentication") || request.getMethod().equals(HttpMethod.GET.name())) {
             chain.doFilter(request, response);

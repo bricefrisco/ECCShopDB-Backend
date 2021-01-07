@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.global.security;
 
+import com.shopdb.ecocitycraft.global.filters.RequestFilter;
 import com.shopdb.ecocitycraft.security.config.JWTConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -35,7 +36,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-        JWTAuthenticationFilter authenticationFilter = new JWTAuthenticationFilter(authenticationManager(), jwtConfig);
+        RequestFilter authenticationFilter = new RequestFilter(authenticationManager(), jwtConfig);
 
         http.cors().and().csrf().disable()
                 .antMatcher("/**").addFilter(authenticationFilter);
