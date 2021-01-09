@@ -11,9 +11,9 @@ import javax.persistence.*;
 @Getter
 @Setter
 public class ChestShopSign {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

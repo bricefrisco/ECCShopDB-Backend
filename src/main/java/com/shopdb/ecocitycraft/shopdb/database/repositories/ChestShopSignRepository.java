@@ -4,6 +4,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.ChestShopSign;
 import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 
 @Repository
-public interface ChestShopSignRepository extends JpaRepository<ChestShopSign, Long>, JpaSpecificationExecutor<ChestShopSign> {
+public interface ChestShopSignRepository extends JpaRepository<ChestShopSign, String>, JpaSpecificationExecutor<ChestShopSign> {
 
     @Transactional
     long deleteByTown(Region town);
@@ -34,4 +35,8 @@ public interface ChestShopSignRepository extends JpaRepository<ChestShopSign, Lo
 
     @Query(value="SELECT DISTINCT material FROM chest_shop_sign WHERE server = :server AND is_sell_sign = true ORDER BY material ASC", nativeQuery = true)
     List<String> findDistinctSellMaterialsByServer(@Param("server") String server);
+
+    @Modifying
+    @Query(value = "DELETE FROM chest_shop_sign WHERE id IN :ids", nativeQuery = true)
+    void deleteByIdIn(@Param("ids") List<String> ids);
 }

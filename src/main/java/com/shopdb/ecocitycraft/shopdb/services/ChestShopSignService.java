@@ -11,6 +11,8 @@ import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignSpecifi
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
 import com.shopdb.ecocitycraft.shopdb.models.signs.*;
+import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.EventType;
+import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.ShopEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,6 +125,40 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         result.setResults(mapSigns(pageableResults.getContent()));
 
         return result;
+    }
+
+    public String processShopEvents(List<ShopEvent> shopEvents) {
+        List<ShopEvent> upserts = shopEvents.stream()
+                .filter(shopEvent -> shopEvent.getEventType().equals(EventType.CREATE)
+                                || shopEvent.getEventType().equals(EventType.UPDATE))
+                .collect(Collectors.toList());
+
+        chestShopSignRepository.deleteByIdIn(
+                shopEvents.stream()
+                        .filter(shopEvent -> shopEvent.getEventType().equals(EventType.DELETE))
+                        .map(ShopEvent::getId).collect(Collectors.toList())
+        );
+
+        HashMap<String, Player> players = playerService.getOrAddPlayers(
+                shopEvents.stream().map(ShopEvent::getOwner).collect(Collectors.toSet())
+        );
+
+
+    }
+
+    public ChestShopSign mapChestShopSign(ShopEvent shopEvent) {
+        Optional<ChestShopSign> maybeChestShopSign = chestShopSignRepository.findById(shopEvent.getId());
+        if (maybeChestShopSign.isPresent()) {
+            return mapChestShopSign(maybeChestShopSign.get(), shopEvent);
+        }
+        ChestShopSign chestShopSign = new ChestShopSign();
+        chestShopSign.setId(shopEvent.getId());
+        // Get region here
+        return mapChestShopSign(shopEvent);
+    }
+
+    public ChestShopSign mapChestShopSign(ChestShopSign chestShopSign, ShopEvent shopEvent) {
+        chestShopSign.
     }
 
     public List<String> getChestShopSignMaterialNames(Server server, TradeType tradeType) {

@@ -13,7 +13,7 @@ import java.util.Objects;
 @Setter
 @ToString
 public class ChestShopSignDto {
-    private long id;
+    private String id;
     private RegionResponse town;
     private Location location;
     private PlayerResponse owner;
