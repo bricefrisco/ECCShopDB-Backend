@@ -12,6 +12,8 @@ import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
 import com.shopdb.ecocitycraft.shopdb.models.regions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class RegionService implements ErrorReasonConstants {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegionService.class);
+
     private final RegionRepository repository;
     private final ChestShopSignRepository chestShopSignRepository;
     private PlayerService playerService;
@@ -61,7 +65,16 @@ public class RegionService implements ErrorReasonConstants {
 
         Region region = mapRegionRequest(request);
         repository.saveAndFlush(region);
+        linkChestShopSigns(region);
         return mapRegionResponse(region);
+    }
+
+    private void linkChestShopSigns(Region region) {
+        List<ChestShopSign> signs = getChestShopSignByRegion(region);
+        for (ChestShopSign sign : signs) {
+            sign.setTown(region);
+        }
+        chestShopSignRepository.saveAll(signs);
     }
 
     private void hideChestShopSigns(Region region) {
