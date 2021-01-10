@@ -11,10 +11,7 @@ import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
-import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
-import com.shopdb.ecocitycraft.shopdb.models.regions.RegionRequest;
-import com.shopdb.ecocitycraft.shopdb.models.regions.RegionResponse;
-import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
+import com.shopdb.ecocitycraft.shopdb.models.regions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -109,8 +106,10 @@ public class RegionService implements ErrorReasonConstants {
         Region region = findRegionByServerAndName(request.getServer(), request.getName());
 
         region.setServer(request.getServer());
-        region.setIBounds(request.getIBounds());
-        region.setOBounds(request.getOBounds());
+
+        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
+        region.setIBounds(bounds.getLowerBounds());
+        region.setOBounds(bounds.getUpperBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
@@ -154,14 +153,47 @@ public class RegionService implements ErrorReasonConstants {
         Region region = new Region();
         region.setName(request.getName().toLowerCase());
         region.setServer(request.getServer());
-        region.setIBounds(request.getIBounds());
-        region.setOBounds(request.getOBounds());
+
+        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
+        region.setIBounds(bounds.getLowerBounds());
+        region.setOBounds(bounds.getUpperBounds());
 
         HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
         region.setMayors(new ArrayList<>(players.values()));
 
         region.setActive(request.getActive());
         return region;
+    }
+
+    private Bounds sort(Location l1, Location l2) {
+        Location lowerBounds = new Location();
+        Location upperBounds = new Location();
+
+        if (l1.getX() <= l2.getX()) {
+            lowerBounds.setX(l1.getX());
+            upperBounds.setX(l2.getX());
+        } else {
+            lowerBounds.setX(l2.getX());
+            upperBounds.setX(l1.getX());
+        }
+
+        if (l1.getY() <= l2.getY()) {
+            lowerBounds.setY(l1.getY());
+            upperBounds.setY(l2.getY());
+        } else {
+            lowerBounds.setY(l2.getY());
+            upperBounds.setY(l1.getY());
+        }
+
+        if (l1.getZ() <= l2.getZ()) {
+            lowerBounds.setZ(l1.getZ());
+            upperBounds.setZ(l2.getZ());
+        } else {
+            lowerBounds.setZ(l2.getZ());
+            upperBounds.setZ(l1.getZ());
+        }
+
+        return new Bounds(lowerBounds, upperBounds);
     }
 
     public List<String> mapMayors(Region region) {
