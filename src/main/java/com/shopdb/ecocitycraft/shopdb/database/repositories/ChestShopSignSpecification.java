@@ -31,12 +31,12 @@ public class ChestShopSignSpecification {
                 conditions.add(builder.equal(sign.get("isSellSign"), true));
             }
 
-            if (params.isFilterIdenticalSigns()) {
-                conditions.add(builder.equal(sign.get("isDistinct"), true));
-            }
-
             if (params.isHideOutOfStock() && params.getTradeType() == TradeType.BUY) {
                 conditions.add(builder.greaterThan(sign.get("count"), 0));
+            }
+
+            if (params.isHideOutOfStock() && params.getTradeType() == TradeType.SELL) {
+                conditions.add(builder.notEqual(sign.get("isFull"), Boolean.FALSE));
             }
 
             return builder.and(conditions.toArray(new Predicate[0]));

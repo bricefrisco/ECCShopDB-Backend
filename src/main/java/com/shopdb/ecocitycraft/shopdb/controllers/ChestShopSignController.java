@@ -5,8 +5,6 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import com.shopdb.ecocitycraft.shopdb.models.signs.SignParams;
-import com.shopdb.ecocitycraft.shopdb.models.signs.SignsRequest;
-import com.shopdb.ecocitycraft.shopdb.models.signs.SignsResponse;
 import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.ShopEvent;
 import com.shopdb.ecocitycraft.shopdb.services.ChestShopSignService;
 import org.slf4j.Logger;

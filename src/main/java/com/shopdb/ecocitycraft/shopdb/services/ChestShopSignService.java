@@ -180,7 +180,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             return false;
         }
 
-        if (!event.getWorld().equals("main") && !event.getWorld().equals("rising_n") && !event.getWorld().equals("rising_e")) {
+        if (!event.getWorld().equals("world") && !event.getWorld().equals("rising_n") && !event.getWorld().equals("rising_e")) {
             LOGGER.info("Skipping event " + event.toString() + " - server cannot be determined.");
             return false;
         }
@@ -207,6 +207,11 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
         if (event.getItem() == null || event.getItem().isEmpty()) {
             LOGGER.info("Skipping event " + event.toString() + " - item is missing");
+            return false;
+        }
+
+        if (event.getFull() == null) {
+            LOGGER.info("Skipping event " + event.toString() + " - 'full' indicator is missing");
             return false;
         }
 
@@ -261,7 +266,9 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         }
 
         sign.setMaterial(event.getItem());
-        // TODO: isDistinct
+
+        sign.setIsHidden(sign.getTown() != null && sign.getTown().getActive());
+        sign.setIsFull(event.getFull());
         sign.setIsBuySign(event.getBuyPrice() != null);
         sign.setIsSellSign(event.getSellPrice() != null);
 
