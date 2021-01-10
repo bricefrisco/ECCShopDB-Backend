@@ -35,7 +35,7 @@ public interface ChestShopSignRepository extends JpaRepository<ChestShopSign, St
 
     @Query(value="SELECT * FROM chest_shop_sign WHERE " +
             "server = :server AND " +
-            ":lx <= x AND :ux >= x AND" +
+            ":lx <= x AND :ux >= x AND " +
             ":ly <= y AND :uy >= y AND " +
             ":lz <= z AND :uz >= z", nativeQuery = true)
     List<ChestShopSign> getChestShopSignByLocation(@Param("server") String server, @Param("lx") int lx, @Param("ux") int ux, @Param("ly") int ly, @Param("uy") int uy, @Param("lz") int lz, @Param("uz") int uz);

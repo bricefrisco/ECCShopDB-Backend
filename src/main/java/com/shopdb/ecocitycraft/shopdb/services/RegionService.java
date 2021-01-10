@@ -63,7 +63,6 @@ public class RegionService implements ErrorReasonConstants {
         }
 
         Region region = mapRegionRequest(request);
-        unHideChestShopSigns(region);
         repository.saveAndFlush(region);
         return mapRegionResponse(region);
     }
@@ -81,7 +80,7 @@ public class RegionService implements ErrorReasonConstants {
     }
 
     private List<ChestShopSign> getChestShopSignByLocation(Server server, Location iBounds, Location oBounds) {
-        int lx= iBounds.getX();
+        int lx = iBounds.getX();
         int ly = iBounds.getY();
         int lz = iBounds.getZ();
         int ux = oBounds.getX();

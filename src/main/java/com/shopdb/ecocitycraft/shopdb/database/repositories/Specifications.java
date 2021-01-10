@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Locale;
 
 public class Specifications {
-
     public static Specification<ChestShopSign> chestShopSpecification(SignParams params) {
         return (sign, query, builder) -> {
             List<Predicate> conditions = new ArrayList<>();
