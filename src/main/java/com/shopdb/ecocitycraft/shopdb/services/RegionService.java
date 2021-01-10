@@ -5,6 +5,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.RegionRepository;
+import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
@@ -16,6 +17,7 @@ import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -29,60 +31,25 @@ import java.util.stream.Collectors;
 public class RegionService implements ErrorReasonConstants {
     private final RegionRepository repository;
     private PlayerService playerService;
-    private ChestShopSignService chestShopSignService;
 
     public RegionService(RegionRepository repository) {
         this.repository = repository;
     }
 
-    public PaginatedChestShopSigns getRegionChestShopSigns(Server server, String name, int page, int pageSize, TradeType tradeType) {
-        Region region = findRegionByServerAndName(server, name);
-        return chestShopSignService.getSignsByRegion(region, tradeType, page, pageSize);
-    }
-
-    public PaginatedPlayerResponse getRegionMayors(Server server, String name, int page, int pageSize) {
-        Region region = findRegionByServerAndName(server, name);
-        return playerService.getMayorsByRegion(region, page, pageSize);
-    }
-
     public PaginatedRegions getRegions(RegionsParams params) {
-        Region example = new Region();
-
-        if (params.getServer() != null) {
-            example.setServer(params.getServer());
-        }
-
-        if (params.isActive()) {
-            example.setActive(params.isActive());
-        }
-
-        if (params.getName() != null) {
-            example.setName(params.getName().toLowerCase());
-        }
-
+        Specification<Region> specification = Specifications.regionSpecification(params);
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), Sort.by("name").ascending());
-        Page<Region> pageableResults = repository.findAll(Example.of(example), pageable);
 
-        PaginatedRegions result = new PaginatedRegions();
-        result.setCurrentPage(params.getPage());
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(pageableResults.getContent().stream().map(this::mapRegionResponse).collect(Collectors.toList()));
-        return result;
-    }
+        Page<Region> pageableResults = repository.findAll(specification, pageable);
 
-    public PaginatedRegions getRegionsByPlayer(Player mayor, int page, int pageSize) {
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("name"));
+        List<RegionResponse> results = pageableResults.getContent().stream().map(this::mapRegionResponse).collect(Collectors.toList());
 
-        Page<Region> pageableResults = repository.findByMayors(mayor, pageable);
-
-        PaginatedRegions response = new PaginatedRegions();
-        response.setResults(pageableResults.getContent().stream().map(this::mapRegionResponse).collect(Collectors.toList()));
-        response.setCurrentPage(page);
-        response.setTotalElements(pageableResults.getTotalElements());
-        response.setTotalPages(pageableResults.getTotalPages());
-
-        return response;
+        return new PaginatedRegions(
+                params.getPage(),
+                pageableResults.getTotalPages(),
+                pageableResults.getTotalElements(),
+                results
+        );
     }
 
     public RegionResponse getRegion(Server server, String name) {
@@ -122,11 +89,6 @@ public class RegionService implements ErrorReasonConstants {
         region.setActive(active);
         repository.saveAndFlush(region);
         return mapRegionResponse(region);
-    }
-
-    public void setLastUpdatedToNow(Region region) {
-        region.setLastUpdated(new Timestamp(System.currentTimeMillis()));
-        repository.saveAndFlush(region);
     }
 
     public Region findRegionByServerAndName(Server server, String name) {
@@ -194,10 +156,5 @@ public class RegionService implements ErrorReasonConstants {
     @Autowired
     public void setPlayerService(PlayerService playerService) {
         this.playerService = playerService;
-    }
-
-    @Autowired
-    public void setChestShopSignService(ChestShopSignService chestShopSignService) {
-        this.chestShopSignService = chestShopSignService;
     }
 }

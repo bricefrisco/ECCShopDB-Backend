@@ -17,4 +17,5 @@ public class PlayersParams {
     private Integer pageSize = 10;
     private String name;
     private boolean active;
+    private String regionName;
 }

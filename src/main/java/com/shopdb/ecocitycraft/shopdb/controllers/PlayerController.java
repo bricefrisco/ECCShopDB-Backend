@@ -50,26 +50,6 @@ public class PlayerController {
         return response;
     }
 
-    @GetMapping("/{name}/towns")
-    public PaginatedRegions getPlayerTowns(@PathVariable String name,
-                                           @Valid @Min(1) @RequestParam(required = false, defaultValue = "1") int page,
-                                           @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize
-    ) {
-        PaginatedRegions response = playerService.getPlayerTowns(name, page, pageSize);
-        eventService.sendPlayerRegionsViewAnalytics(name, page);
-        return response;
-    }
-
-    @GetMapping("/{name}/chest-shops")
-    public PaginatedChestShopSigns getSigns(@PathVariable String name,
-                                            @RequestParam(required = false) TradeType tradeType,
-                                            @Valid @Min(1) @RequestParam(required = false, defaultValue = "1") int page,
-                                            @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize) {
-        PaginatedChestShopSigns response = playerService.getPlayerChestShops(name, tradeType, page, pageSize);
-        eventService.sendPlayerChestShopsViewAnalytics(name, tradeType, page);
-        return response;
-    }
-
     @PostMapping
     public PlayerResponse createPlayer(@Valid @RequestBody PlayerRequest request) {
         return playerService.createPlayer(request);

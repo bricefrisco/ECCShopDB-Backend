@@ -24,4 +24,5 @@ public class SignParams {
     private boolean hideOutOfStock = false;
     private SortBy sortBy = SortBy.BEST_PRICE;
     private String regionName;
+    private String playerName;
 }

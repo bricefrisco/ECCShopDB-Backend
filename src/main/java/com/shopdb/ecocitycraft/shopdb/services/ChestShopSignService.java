@@ -8,7 +8,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.SortBy;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignRepository;
-import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignSpecification;
+import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
 import com.shopdb.ecocitycraft.shopdb.models.signs.*;
@@ -37,77 +37,20 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
     }
 
     public PaginatedChestShopSigns getSigns(SignParams params) {
-        Sort sort;
-
-        if (params.getSortBy() == SortBy.BEST_PRICE) {
-            sort = params.getTradeType() == TradeType.BUY ? Sort.by("buyPriceEach").ascending() : Sort.by("sellPriceEach").descending();
-        } else if (params.getSortBy() == SortBy.QUANTITY) {
-            sort = Sort.by("quantity").descending();
-        } else if (params.getSortBy() == SortBy.MATERIAL) {
-            sort = Sort.by("material").ascending();
-        } else {
-            sort = Sort.by("count").descending();
-        }
-
-        Specification<ChestShopSign> specification = ChestShopSignSpecification.withSpecification(params);
+        Sort sort = getSort(params.getSortBy(), params.getTradeType());
+        Specification<ChestShopSign> specification = Specifications.chestShopSpecification(params);
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), sort);
+
         Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(specification, pageable);
 
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(params.getPage());
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
+        List<ChestShopSignDto> results = mapSigns(pageableResults.getContent());
 
-        return result;
-    }
-
-    public PaginatedChestShopSigns getSignsByRegion(Region region, TradeType tradeType, int page, int pageSize) {
-        ChestShopSign example = new ChestShopSign();
-        example.setTown(region);
-
-        if (tradeType == TradeType.BUY) {
-            example.setIsBuySign(true);
-        }
-
-        if (tradeType == TradeType.SELL) {
-            example.setIsSellSign(true);
-        }
-
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
-        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(Example.of(example), pageable);
-
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(page);
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
-
-        return result;
-    }
-
-    public PaginatedChestShopSigns getSignsByPlayer(Player player, TradeType tradeType, int page, int pageSize) {
-        ChestShopSign example = new ChestShopSign();
-        example.setOwner(player);
-
-        if (tradeType == TradeType.BUY) {
-            example.setIsBuySign(true);
-        }
-
-        if (tradeType == TradeType.SELL) {
-            example.setIsSellSign(true);
-        }
-
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
-        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(Example.of(example), pageable);
-
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(page);
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
-
-        return result;
+        return new PaginatedChestShopSigns(
+                params.getPage(),
+                pageableResults.getTotalPages(),
+                pageableResults.getTotalElements(),
+                results
+        );
     }
 
     public String processShopEvents(List<ShopEvent> shopEvents) {
@@ -217,7 +160,6 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
         return true;
     }
-
 
     private ChestShopSign convert(ShopEvent event, HashMap<String, Player> players) {
         ChestShopSign chestShopSign = new ChestShopSign();
@@ -336,6 +278,14 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
     private Double determineBuyPriceEach(Integer quantity, Double buyPrice) {
         return quantity == null || buyPrice == null ? null : buyPrice / quantity;
+    }
+
+    private Sort getSort(SortBy sortBy, TradeType tradeType) {
+        if (sortBy == SortBy.BEST_PRICE && tradeType == TradeType.BUY) return Sort.by("buyPriceEach").ascending();
+        if (sortBy == SortBy.BEST_PRICE && tradeType == TradeType.SELL) return Sort.by("sellPriceEach").descending();
+        if (sortBy == SortBy.QUANTITY) return Sort.by("quantity").descending();
+        if (sortBy == SortBy.MATERIAL) return Sort.by("material").ascending();
+        return Sort.by("count").descending();
     }
 
     @Autowired

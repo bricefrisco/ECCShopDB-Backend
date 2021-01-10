@@ -4,6 +4,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.Player;
 import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.PlayerRepository;
+import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
@@ -15,6 +16,8 @@ import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -26,8 +29,6 @@ import java.util.stream.Collectors;
 @Service
 public class PlayerService implements ErrorReasonConstants {
     private final PlayerRepository playerRepository;
-    private ChestShopSignService chestShopSignService;
-    private RegionService regionService;
 
     public PlayerService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
@@ -60,48 +61,19 @@ public class PlayerService implements ErrorReasonConstants {
         return active ? playerRepository.getActivePlayerNames() : playerRepository.getPlayerNames();
     }
 
-    public PaginatedPlayerResponse getMayorsByRegion(Region town, int page, int pageSize) {
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("name"));
-
-        Page<Player> pageableResults = playerRepository.findByTowns(town, pageable);
-
-        PaginatedPlayerResponse response = new PaginatedPlayerResponse();
-        response.setResults(pageableResults.getContent().stream().map(this::mapPlayerResponse).collect(Collectors.toList()));
-        response.setCurrentPage(page);
-        response.setTotalElements(pageableResults.getTotalElements());
-        response.setTotalPages(pageableResults.getTotalPages());
-
-        return response;
-    }
-
-    public PaginatedRegions getPlayerTowns(String name, int page, int pageSize) {
-        Player player = getPlayerByName(name);
-        return regionService.getRegionsByPlayer(player, page, pageSize);
-    }
-
-    public PaginatedChestShopSigns getPlayerChestShops(String name, TradeType tradeType, int page, int pageSize) {
-        return chestShopSignService.getSignsByPlayer(getPlayerByName(name), tradeType, page, pageSize);
-    }
-
     public PaginatedPlayerResponse getPlayers(PlayersParams params) {
-        Player example = new Player();
-        if (params.getName() != null) {
-            example.setName(params.getName().toLowerCase());
-        }
-
-        if (params.isActive()) {
-            example.setActive(true);
-        }
-
+        Specification<Player> specification = Specifications.playerSpecification(params);
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), Sort.by("name"));
-        Page<Player> pageableResults = playerRepository.findAll(Example.of(example), pageable);
-        PaginatedPlayerResponse response = new PaginatedPlayerResponse();
-        response.setResults(pageableResults.getContent().stream().map(this::mapPlayerResponse).collect(Collectors.toList()));
-        response.setCurrentPage(params.getPage());
-        response.setTotalElements(pageableResults.getTotalElements());
-        response.setTotalPages(pageableResults.getTotalPages());
 
-        return response;
+        Page<Player> pageableResults = playerRepository.findAll(specification, pageable);
+        List<PlayerResponse> results = pageableResults.getContent().stream().map(this::mapPlayerResponse).collect(Collectors.toList());
+
+        return new PaginatedPlayerResponse(
+                params.getPage(),
+                pageableResults.getTotalPages(),
+                pageableResults.getTotalElements(),
+                results
+        );
     }
 
     public HashMap<String, Player> getOrAddPlayers(Set<String> playerNames) {
@@ -155,15 +127,5 @@ public class PlayerService implements ErrorReasonConstants {
             playerResponse.setActive(player.getActive());
         }
         return playerResponse;
-    }
-
-    @Autowired
-    public void setChestShopSignService(ChestShopSignService chestShopSignService) {
-        this.chestShopSignService = chestShopSignService;
-    }
-
-    @Autowired
-    public void setRegionService(RegionService regionService) {
-        this.regionService = regionService;
     }
 }
