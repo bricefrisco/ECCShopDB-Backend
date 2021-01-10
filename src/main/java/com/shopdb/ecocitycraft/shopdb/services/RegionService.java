@@ -183,6 +183,10 @@ public class RegionService implements ErrorReasonConstants {
         return response;
     }
 
+    public Region findByCoordinates(int x, int y, int z, String server) {
+        return repository.findByCoordinates(x, y, z, server);
+    }
+
     private boolean regionExists(Server server, String name) {
         return !(repository.findOneByServerAndNameIgnoreCase(server, name) == null);
     }

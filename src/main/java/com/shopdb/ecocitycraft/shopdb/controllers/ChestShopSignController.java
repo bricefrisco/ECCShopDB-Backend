@@ -45,14 +45,9 @@ public class ChestShopSignController {
     }
 
     @PostMapping
-    private SignsResponse createChestShopSigns(@Valid @RequestBody SignsRequest request) {
-        return chestShopSignService.createSigns(request);
-    }
-
-    @PostMapping("/batch")
     private String createChestShopSigns(@RequestBody List<ShopEvent> shopEvents) {
         LOGGER.info("# Events: " + shopEvents.size());
         shopEvents.forEach(shopEvent -> LOGGER.info(shopEvent.toString()));
-        return "Testing.";
+        return chestShopSignService.processShopEvents(shopEvents);
     }
 }

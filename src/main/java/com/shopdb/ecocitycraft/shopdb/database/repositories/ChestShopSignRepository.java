@@ -36,6 +36,7 @@ public interface ChestShopSignRepository extends JpaRepository<ChestShopSign, St
     @Query(value="SELECT DISTINCT material FROM chest_shop_sign WHERE server = :server AND is_sell_sign = true ORDER BY material ASC", nativeQuery = true)
     List<String> findDistinctSellMaterialsByServer(@Param("server") String server);
 
+    @Transactional
     @Modifying
     @Query(value = "DELETE FROM chest_shop_sign WHERE id IN :ids", nativeQuery = true)
     void deleteByIdIn(@Param("ids") List<String> ids);

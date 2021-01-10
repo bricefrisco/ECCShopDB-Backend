@@ -20,6 +20,8 @@ public class AuthenticationService {
     private final JWTConfiguration jwtConfig;
     private final UserRepository userRepository;
 
+    private static final String API_KEY_USER = "ShopDBAPI";
+
     public AuthenticationService(BCryptPasswordEncoder encoder, JWTConfiguration jwtConfig, UserRepository userRepository) {
         this.encoder = encoder;
         this.jwtConfig = jwtConfig;
@@ -40,5 +42,10 @@ public class AuthenticationService {
                 .sign(Algorithm.HMAC512(jwtConfig.getSecret().getBytes()));
 
         return new LoginResponse(user.getUsername(), token);
+    }
+
+    public boolean apiKeyValid(String key) {
+        User user = userRepository.findByUsername(API_KEY_USER);
+        return user != null && encoder.matches(key, user.getPassword());
     }
 }

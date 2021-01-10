@@ -28,4 +28,10 @@ public interface RegionRepository extends JpaRepository<Region, Long> {
     @Query(value = "SELECT DISTINCT name FROM region WHERE active = true AND server = :server ORDER BY name", nativeQuery = true)
     List<String> findActiveRegionNamesByServer(@Param("server") String server);
 
+    @Query(value = "SELECT * FROM region WHERE " +
+            "server = :server AND " +
+            "i_x <= :x AND o_x >= :x AND " +
+            "i_y <= :y AND o_y >= :y AND " +
+            "i_z <= :z AND o_z >= :z", nativeQuery = true)
+    Region findByCoordinates(@Param("x") int x, @Param("y") int y, @Param("z") int z, @Param("server") String server);
 }
