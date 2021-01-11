@@ -95,8 +95,9 @@ public class Specifications {
                 conditions.add(builder.equal(player.get("active"), Boolean.TRUE));
             }
 
-            if (params.getRegionName() != null) {
+            if (params.getRegionName() != null && params.getServer() != null) {
                 conditions.add(builder.equal(player.join("towns").get("name"), params.getRegionName().toLowerCase()));
+                conditions.add(builder.equal(player.join("towns").get("server"), params.getServer().name()));
             }
 
             return builder.and(conditions.toArray(new Predicate[0]));

@@ -207,7 +207,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             sign.setBuyPriceEach(determineBuyPriceEach(event.getQuantity(), event.getBuyPrice().doubleValue()));
         }
 
-        sign.setMaterial(event.getItem());
+        sign.setMaterial(event.getItem().toLowerCase());
 
         sign.setIsHidden(sign.getTown() == null || !sign.getTown().getActive());
         sign.setIsFull(event.getFull());
