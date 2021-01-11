@@ -197,22 +197,31 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         sign.setQuantity(event.getQuantity());
         sign.setCount(event.getCount());
 
-        if (event.getSellPrice() != null) {
+        if (event.getSellPrice() != null && event.getSellPrice().doubleValue() != -1.0) {
             sign.setSellPrice(event.getSellPrice().doubleValue());
             sign.setSellPriceEach(determineSellPriceEach(event.getQuantity(), event.getSellPrice().doubleValue()));
+            sign.setIsSellSign(Boolean.TRUE);
+        } else {
+            sign.setSellPrice(null); // Needed for overriding previous values
+            sign.setSellPriceEach(null);
+            sign.setIsSellSign(Boolean.FALSE);
         }
 
-        if (event.getBuyPrice() != null) {
+        if (event.getBuyPrice() != null && event.getBuyPrice().doubleValue() != -1.0) {
             sign.setBuyPrice(event.getBuyPrice().doubleValue());
             sign.setBuyPriceEach(determineBuyPriceEach(event.getQuantity(), event.getBuyPrice().doubleValue()));
+            sign.setIsBuySign(Boolean.TRUE);
+        } else {
+            sign.setBuyPrice(null);
+            sign.setBuyPriceEach(null);
+            sign.setIsBuySign(Boolean.FALSE);
         }
 
         sign.setMaterial(event.getItem().toLowerCase());
 
         sign.setIsHidden(sign.getTown() == null || !sign.getTown().getActive());
         sign.setIsFull(event.getFull());
-        sign.setIsBuySign(event.getBuyPrice() != null);
-        sign.setIsSellSign(event.getSellPrice() != null);
+        sign.setIsSellSign(sign.getSellPrice() != null);
 
         return sign;
     }
