@@ -167,7 +167,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
         String world = event.getWorld();
         switch (world) {
-            case "world":
+            case "rising":
                 chestShopSign.setServer(Server.MAIN);
                 break;
             case "rising_n":
