@@ -277,6 +277,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             result.setSellPrice(sign.getSellPrice());
         }
 
+        result.setFull(sign.getIsFull());
         result.setMaterial(sign.getMaterial());
         return result;
     }

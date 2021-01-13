@@ -43,7 +43,7 @@ public class Specifications {
                 conditions.add(builder.greaterThan(sign.get("count"), 0));
             }
 
-            if (params.isHideOutOfStock() && params.getTradeType() == TradeType.SELL) {
+            if (params.isHideFull() && params.getTradeType() == TradeType.SELL) {
                 conditions.add(builder.notEqual(sign.get("isFull"), Boolean.TRUE));
             }
 

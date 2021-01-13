@@ -25,4 +25,5 @@ public class SignParams {
     private SortBy sortBy = SortBy.BEST_PRICE;
     private String regionName;
     private String playerName;
+    private boolean hideFull = false;
 }

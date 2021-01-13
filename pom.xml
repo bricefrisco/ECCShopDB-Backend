@@ -12,7 +12,7 @@
 
 	<groupId>com.shopdb.ecocitycraft</groupId>
 	<artifactId>backend-services</artifactId>
-	<version>3.0.1</version>
+	<version>3.0.2</version>
 	<name>ShopDB Backend</name>
 	<description>Back-End Services for ShopDB</description>
 

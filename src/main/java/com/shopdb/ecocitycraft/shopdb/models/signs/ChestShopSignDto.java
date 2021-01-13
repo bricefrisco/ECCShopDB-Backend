@@ -21,6 +21,7 @@ public class ChestShopSignDto {
     private int count;
     private double buyPrice;
     private double sellPrice;
+    private boolean isFull;
     private String material;
 
     @Override
