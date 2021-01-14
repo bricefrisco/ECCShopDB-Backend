@@ -123,7 +123,7 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             return false;
         }
 
-        if (!event.getWorld().equals("world") && !event.getWorld().equals("rising_n") && !event.getWorld().equals("rising_e")) {
+        if (!event.getWorld().equals("rising") && !event.getWorld().equals("rising_n") && !event.getWorld().equals("rising_e")) {
             LOGGER.info("Skipping event " + event.toString() + " - server cannot be determined.");
             return false;
         }
