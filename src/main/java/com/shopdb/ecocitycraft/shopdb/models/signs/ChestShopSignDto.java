@@ -13,7 +13,7 @@ import java.util.Objects;
 @Setter
 @ToString
 public class ChestShopSignDto {
-    private long id;
+    private String id;
     private RegionResponse town;
     private Location location;
     private PlayerResponse owner;
@@ -21,6 +21,7 @@ public class ChestShopSignDto {
     private int count;
     private double buyPrice;
     private double sellPrice;
+    private boolean isFull;
     private String material;
 
     @Override

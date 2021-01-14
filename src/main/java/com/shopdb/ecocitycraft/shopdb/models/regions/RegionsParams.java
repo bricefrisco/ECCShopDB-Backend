@@ -19,4 +19,5 @@ public class RegionsParams {
     private Server server;
     private boolean active;
     private String name;
+    private String mayorName;
 }

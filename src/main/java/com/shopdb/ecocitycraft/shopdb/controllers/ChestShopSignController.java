@@ -5,9 +5,10 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import com.shopdb.ecocitycraft.shopdb.models.signs.SignParams;
-import com.shopdb.ecocitycraft.shopdb.models.signs.SignsRequest;
-import com.shopdb.ecocitycraft.shopdb.models.signs.SignsResponse;
+import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.ShopEvent;
 import com.shopdb.ecocitycraft.shopdb.services.ChestShopSignService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -16,6 +17,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/chest-shops")
 public class ChestShopSignController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignController.class);
+
     private final EventService eventService;
     private final ChestShopSignService chestShopSignService;
 
@@ -40,7 +43,9 @@ public class ChestShopSignController {
     }
 
     @PostMapping
-    private SignsResponse createChestShopSigns(@Valid @RequestBody SignsRequest request) {
-        return chestShopSignService.createSigns(request);
+    private String createChestShopSigns(@RequestBody List<ShopEvent> shopEvents) {
+        LOGGER.info("# Events: " + shopEvents.size());
+        shopEvents.forEach(shopEvent -> LOGGER.info(shopEvent.toString()));
+        return chestShopSignService.processShopEvents(shopEvents);
     }
 }

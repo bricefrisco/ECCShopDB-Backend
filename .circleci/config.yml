@@ -9,7 +9,65 @@ workflows:
             branches:
               only: master
 
+      - build_test:
+          filters:
+            branches:
+              only: test
+
 jobs:
+  build_test:
+    docker:
+      - image: circleci/openjdk:8-jdk-stretch
+
+    working_directory: ~/application
+
+    steps:
+      - checkout
+
+      - run:
+          name: Login to DockerHub
+          command: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+
+      - setup_remote_docker:
+          version: 19.03.13
+
+      - restore_cache:
+          keys:
+            - application-{{ checksum "pom.xml" }}
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: application-{{ checksum "pom.xml" }}
+
+      - run:
+          name: Export key
+          command: echo $TEST_BASE64_KEY | base64 -d > key.pem
+
+      - run:
+          name: Export cert
+          command: echo $TEST_BASE64_CERT | base64 -d > cert.pem
+
+      - run:
+          name: Convert to PKCS12
+          command: openssl pkcs12 -export -out src/main/resources/key.p12 -inkey key.pem -in cert.pem -passout pass:$TEST_PKCS12_PASS -name shopdb
+
+      - run:
+          name: Package the JAR
+          command: mvn clean package
+
+      - run:
+          name: Build docker image
+          command: docker build -t bricefrisco/eccshopdb-backend-test:$CIRCLE_BUILD_NUM .
+
+      - run:
+          name: Push docker image
+          command: docker push bricefrisco/eccshopdb-backend-test:$CIRCLE_BUILD_NUM
+
+      - run:
+          name: Deploy to server
+          command: ssh -o StrictHostKeyChecking=no $HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend-test $CIRCLE_BUILD_NUM $TEST_DOCKER_ENV_ARGS"
+
   build:
     docker:
       - image: circleci/openjdk:8-jdk-stretch

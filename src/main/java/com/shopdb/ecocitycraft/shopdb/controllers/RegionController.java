@@ -2,20 +2,15 @@ package com.shopdb.ecocitycraft.shopdb.controllers;
 
 import com.shopdb.ecocitycraft.analytics.services.EventService;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
-import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
-import com.shopdb.ecocitycraft.shopdb.models.players.PaginatedPlayerResponse;
 import com.shopdb.ecocitycraft.shopdb.models.regions.PaginatedRegions;
 import com.shopdb.ecocitycraft.shopdb.models.regions.RegionRequest;
 import com.shopdb.ecocitycraft.shopdb.models.regions.RegionResponse;
 import com.shopdb.ecocitycraft.shopdb.models.regions.RegionsParams;
-import com.shopdb.ecocitycraft.shopdb.models.signs.PaginatedChestShopSigns;
 import com.shopdb.ecocitycraft.shopdb.services.RegionService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -31,7 +26,7 @@ public class RegionController {
     }
 
     @GetMapping
-    public PaginatedRegions getAllRegions(@Valid @ModelAttribute RegionsParams regionsParams) {
+    public PaginatedRegions getRegions(@Valid @ModelAttribute RegionsParams regionsParams) {
         PaginatedRegions response = regionService.getRegions(regionsParams);
         if (!response.getResults().isEmpty()) {
             eventService.sendRegionSearchAnalytics(regionsParams);
@@ -51,30 +46,6 @@ public class RegionController {
         if (sendAnalytics) { // So the bot won't send analytics
             eventService.sendRegionViewAnalytics(server, name);
         }
-        return response;
-    }
-
-    @GetMapping("/{server}/{name}/chest-shops")
-    public PaginatedChestShopSigns getRegionChestShopSigns(
-            @PathVariable Server server,
-            @PathVariable String name,
-            @Valid @Min(1) @RequestParam(required = false, defaultValue = "1") int page,
-            @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize,
-            @RequestParam(required = false) TradeType tradeType) {
-        PaginatedChestShopSigns response = regionService.getRegionChestShopSigns(server, name, page, pageSize, tradeType);
-        eventService.sendRegionChestShopsViewAnalytics(server, name, tradeType, page);
-        return response;
-    }
-
-    @GetMapping("/{server}/{name}/mayors")
-    public PaginatedPlayerResponse getRegionMayors(
-            @PathVariable Server server,
-            @PathVariable String name,
-            @Valid @Min(1) @RequestParam(required = false, defaultValue = "1") int page,
-            @Valid @Min(1) @Max(100) @RequestParam(required = false, defaultValue = "10") int pageSize
-    ) {
-        PaginatedPlayerResponse response = regionService.getRegionMayors(server, name, page, pageSize);
-        eventService.sendRegionMayorsViewAnalytics(server, name, page);
         return response;
     }
 

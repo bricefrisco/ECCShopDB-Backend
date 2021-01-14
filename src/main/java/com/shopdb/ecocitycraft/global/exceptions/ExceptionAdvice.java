@@ -5,6 +5,8 @@ import com.shopdb.ecocitycraft.security.models.exceptions.AuthorizationException
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.AlreadyExistentException;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.NotFoundException;
 import com.shopdb.ecocitycraft.shopdb.models.exceptions.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -16,12 +18,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.validation.ConstraintViolationException;
+import java.sql.SQLOutput;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestControllerAdvice
 public class ExceptionAdvice {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionAdvice.class);
 
     /**
      * Authorization Exceptions
@@ -37,12 +41,6 @@ public class ExceptionAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFoundException(Exception ex) {
         return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleException(Exception ex) {
-        return createErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -135,6 +133,16 @@ public class ExceptionAdvice {
         return new ErrorResponse(new Timestamp(System.currentTimeMillis()),
                 HttpStatus.NOT_FOUND.value(),
                 HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse onException(Exception ex) {
+        LOGGER.error("Exception occurred:", ex);
+        return new ErrorResponse(new Timestamp(System.currentTimeMillis()),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 ex.getMessage());
     }
 

@@ -1,14 +1,14 @@
 package com.shopdb.ecocitycraft.shopdb.models.signs;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class PaginatedChestShopSigns {
     private int currentPage;
     private int totalPages;

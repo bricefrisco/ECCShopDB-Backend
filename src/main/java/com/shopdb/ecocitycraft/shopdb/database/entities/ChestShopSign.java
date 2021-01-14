@@ -11,9 +11,9 @@ import javax.persistence.*;
 @Getter
 @Setter
 public class ChestShopSign {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -35,7 +35,8 @@ public class ChestShopSign {
     private Double buyPriceEach;
     private Double sellPriceEach;
     private String material;
-    private Boolean isDistinct;
+    private Boolean isFull;
+    private Boolean isHidden;
     private Boolean isBuySign;
     private Boolean isSellSign;
 
@@ -72,7 +73,6 @@ public class ChestShopSign {
                 ", buyPrice=" + buyPrice +
                 ", sellPrice=" + sellPrice +
                 ", material='" + material + '\'' +
-                ", isDistinct=" + isDistinct +
                 ", isBuySign=" + isBuySign +
                 ", isSellSign=" + isSellSign +
                 '}';

@@ -21,8 +21,9 @@ public class SignParams {
     private String material;
     private Server server;
     private TradeType tradeType;
-    private boolean filterIdenticalSigns = false;
     private boolean hideOutOfStock = false;
     private SortBy sortBy = SortBy.BEST_PRICE;
     private String regionName;
+    private String playerName;
+    private boolean hideFull = false;
 }

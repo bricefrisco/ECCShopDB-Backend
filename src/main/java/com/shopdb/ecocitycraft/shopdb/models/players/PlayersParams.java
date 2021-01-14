@@ -1,5 +1,6 @@
 package com.shopdb.ecocitycraft.shopdb.models.players;
 
+import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -17,4 +18,6 @@ public class PlayersParams {
     private Integer pageSize = 10;
     private String name;
     private boolean active;
+    private String regionName;
+    private Server server;
 }

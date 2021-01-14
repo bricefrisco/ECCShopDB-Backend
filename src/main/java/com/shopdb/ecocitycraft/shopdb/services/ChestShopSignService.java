@@ -3,25 +3,30 @@ package com.shopdb.ecocitycraft.shopdb.services;
 import com.shopdb.ecocitycraft.shopdb.database.entities.ChestShopSign;
 import com.shopdb.ecocitycraft.shopdb.database.entities.Player;
 import com.shopdb.ecocitycraft.shopdb.database.entities.Region;
+import com.shopdb.ecocitycraft.shopdb.database.entities.embedded.Location;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.SortBy;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignRepository;
-import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignSpecification;
+import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
 import com.shopdb.ecocitycraft.shopdb.models.signs.*;
+import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.EventType;
+import com.shopdb.ecocitycraft.shopdb.models.signs.ecc.ShopEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ChestShopSignService implements ErrorReasonConstants, RegexConstants {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignService.class);
 
     private final ChestShopSignRepository chestShopSignRepository;
     private PlayerService playerService;
@@ -31,97 +36,194 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         this.chestShopSignRepository = chestShopSignRepository;
     }
 
-    public SignsResponse createSigns(SignsRequest request) {
-        Region region = regionService.findRegionByServerAndName(request.getServer(), request.getRegionName());
-        long numSignsRemoved = chestShopSignRepository.deleteByTown(region);
-
-        List<Sign> signs = ChestShopSignValidator.getValidSigns(ChestShopSignValidator.getInBoundSigns(request.getSigns(), region));
-        HashMap<String, Player> players = playerService.getOrAddPlayers(ChestShopSignValidator.getPlayerNames(signs));
-
-        List<ChestShopSign> chestShopSigns = new ArrayList<>();
-        for (Sign sign : signs) {
-            Player player = players.get(sign.getNameLine().toLowerCase());
-            chestShopSigns.add(mapDTOToSign(chestShopSigns, sign, player, region));
-        }
-
-        chestShopSignRepository.saveAll(chestShopSigns);
-        regionService.setLastUpdatedToNow(region);
-
-        return new SignsResponse(numSignsRemoved, chestShopSigns.size(), regionService.mapRegionResponse(region));
-    }
-
     public PaginatedChestShopSigns getSigns(SignParams params) {
-        Sort sort;
-
-        if (params.getSortBy() == SortBy.BEST_PRICE) {
-            sort = params.getTradeType() == TradeType.BUY ? Sort.by("buyPriceEach").ascending() : Sort.by("sellPriceEach").descending();
-        } else if (params.getSortBy() == SortBy.QUANTITY){
-            sort = Sort.by("quantity").descending();
-        } else if (params.getSortBy() == SortBy.MATERIAL) {
-            sort = Sort.by("material").ascending();
-        } else {
-            sort = Sort.by("count").descending();
-        }
-
-        Specification<ChestShopSign> specification = ChestShopSignSpecification.withSpecification(params);
+        Sort sort = getSort(params.getSortBy(), params.getTradeType());
+        Specification<ChestShopSign> specification = Specifications.chestShopSpecification(params);
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), sort);
+
         Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(specification, pageable);
 
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(params.getPage());
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
+        List<ChestShopSignDto> results = mapSigns(pageableResults.getContent());
 
-        return result;
+        return new PaginatedChestShopSigns(
+                params.getPage(),
+                pageableResults.getTotalPages(),
+                pageableResults.getTotalElements(),
+                results
+        );
     }
 
-    public PaginatedChestShopSigns getSignsByRegion(Region region, TradeType tradeType, int page, int pageSize) {
-        ChestShopSign example = new ChestShopSign();
-        example.setTown(region);
+    public String processShopEvents(List<ShopEvent> shopEvents) {
+        LOGGER.info("Beginning to process " + shopEvents.size() + " shop events...");
 
-        if (tradeType == TradeType.BUY) {
-            example.setIsBuySign(true);
+        List<String> shopIdsToDelete = new ArrayList<>();
+        List<ShopEvent> upserts = new ArrayList<>();
+        Set<String> playerNames = new HashSet<>();
+
+        LOGGER.info("Sorting shop events...");
+        for (ShopEvent shopEvent : shopEvents) {
+            if (shopEvent.getEventType().equals(EventType.DELETE)) {
+                shopIdsToDelete.add(shopEvent.getId());
+            } else {
+                upserts.add(shopEvent);
+                playerNames.add(shopEvent.getOwner());
+            }
         }
 
-        if (tradeType == TradeType.SELL) {
-            example.setIsSellSign(true);
+        LOGGER.info("Found " + shopIdsToDelete.size() + " shop deletion events.");
+        LOGGER.info("Found " + upserts.size() + " shops to create or modify.");
+
+        if (shopIdsToDelete.size() > 0) {
+            LOGGER.info("Deleting " + shopIdsToDelete.size() + " shops...");
+            chestShopSignRepository.deleteByIdIn(shopIdsToDelete);
         }
 
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
-        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(Example.of(example), pageable);
+        if (upserts.size() == 0) {
+            String response = "Successfully created/updated 0 chest shops, and removed " + shopIdsToDelete.size() + " chest shops.";
+            LOGGER.info(response);
+            return response;
+        }
 
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(page);
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
+        LOGGER.info("Retrieving/adding " + playerNames.size() + " owners...");
+        HashMap<String, Player> players = playerService.getOrAddPlayers(playerNames);
 
-        return result;
+        LOGGER.info("Mapping " + shopEvents.size() + " events to chest shops...");
+        List<ChestShopSign> signs = new ArrayList<>();
+        for (ShopEvent upsert : upserts) {
+            if (!eventIsValid(upsert)) continue;
+            Optional<ChestShopSign> maybeSign = chestShopSignRepository.findById(upsert.getId());
+            ChestShopSign sign = maybeSign.map(chestShopSign -> convert(chestShopSign, upsert, players)).orElseGet(() -> convert(upsert, players));
+            signs.add(sign);
+        }
+
+        LOGGER.info("Adding " + signs.size() + " chest shops...");
+        if (signs.size() > 0) {
+            chestShopSignRepository.saveAll(signs);
+        }
+
+
+        String response = "Successfully created/updated " + signs.size() + " chest shops, and removed " + shopIdsToDelete.size() + " chest shops.";
+        LOGGER.info(response);
+        return response;
     }
 
-    public PaginatedChestShopSigns getSignsByPlayer(Player player, TradeType tradeType, int page, int pageSize) {
-        ChestShopSign example = new ChestShopSign();
-        example.setOwner(player);
-
-        if (tradeType == TradeType.BUY) {
-            example.setIsBuySign(true);
+    private boolean eventIsValid(ShopEvent event) {
+        if (event.getId() == null || event.getId().isEmpty()) {
+            LOGGER.info("Skipping event " + event.toString() + " - ID is null or empty.");
+            return false;
         }
 
-        if (tradeType == TradeType.SELL) {
-            example.setIsSellSign(true);
+        if (event.getEventType() == null) {
+            LOGGER.info("Skipping event " + event.toString() + " - event type not specified.");
+            return false;
         }
 
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("material").ascending());
-        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(Example.of(example), pageable);
+        if (event.getWorld() == null || event.getWorld().isEmpty()) {
+            LOGGER.info("Skipping event " + event.toString() + " - no world specified.");
+            return false;
+        }
 
-        PaginatedChestShopSigns result = new PaginatedChestShopSigns();
-        result.setCurrentPage(page);
-        result.setTotalPages(pageableResults.getTotalPages());
-        result.setTotalElements(pageableResults.getTotalElements());
-        result.setResults(mapSigns(pageableResults.getContent()));
+        if (!event.getWorld().equals("world") && !event.getWorld().equals("rising_n") && !event.getWorld().equals("rising_e")) {
+            LOGGER.info("Skipping event " + event.toString() + " - server cannot be determined.");
+            return false;
+        }
 
-        return result;
+        if (event.getX() == null || event.getY() == null || event.getZ() == null) {
+            LOGGER.info("Skipping event " + event.toString() + " - X, Y, or Z coordinate is missing.");
+            return false;
+        }
+
+        if (event.getOwner() == null || event.getOwner().isEmpty()) {
+            LOGGER.info("Skipping event " + event.toString() + " - owner is missing");
+            return false;
+        }
+
+        if (event.getQuantity() == null || event.getQuantity() == 0) {
+            LOGGER.info("Skipping event " + event.toString() + " - shop quantity is missing");
+            return false;
+        }
+
+        if (event.getCount() == null) {
+            LOGGER.info("Skipping event " + event.toString() + " - count is missing");
+            return false;
+        }
+
+        if (event.getItem() == null || event.getItem().isEmpty()) {
+            LOGGER.info("Skipping event " + event.toString() + " - item is missing");
+            return false;
+        }
+
+        if (event.getFull() == null) {
+            LOGGER.info("Skipping event " + event.toString() + " - 'full' indicator is missing");
+            return false;
+        }
+
+        return true;
+    }
+
+    private ChestShopSign convert(ShopEvent event, HashMap<String, Player> players) {
+        ChestShopSign chestShopSign = new ChestShopSign();
+        chestShopSign.setId(event.getId());
+
+        String world = event.getWorld();
+        switch (world) {
+            case "rising":
+                chestShopSign.setServer(Server.MAIN);
+                break;
+            case "rising_n":
+                chestShopSign.setServer(Server.MAIN_NORTH);
+                break;
+            case "rising_e":
+                chestShopSign.setServer(Server.MAIN_EAST);
+                break;
+        }
+
+        Region region = regionService.findByCoordinates(event.getX(), event.getY(), event.getZ(), chestShopSign.getServer().name());
+        if (region != null) {
+            chestShopSign.setTown(region);
+        }
+
+        Location location = new Location();
+        location.setX(event.getX());
+        location.setY(event.getY());
+        location.setZ(event.getZ());
+        chestShopSign.setLocation(location);
+
+        return convert(chestShopSign, event, players);
+    }
+
+    private ChestShopSign convert(ChestShopSign sign, ShopEvent event, HashMap<String, Player> players) {
+        sign.setOwner(players.get(event.getOwner()));
+        sign.setQuantity(event.getQuantity());
+        sign.setCount(event.getCount());
+
+        if (event.getSellPrice() != null && event.getSellPrice().doubleValue() != -1.0) {
+            sign.setSellPrice(event.getSellPrice().doubleValue());
+            sign.setSellPriceEach(determineSellPriceEach(event.getQuantity(), event.getSellPrice().doubleValue()));
+            sign.setIsSellSign(Boolean.TRUE);
+        } else {
+            sign.setSellPrice(null); // Needed for overriding previous values
+            sign.setSellPriceEach(null);
+            sign.setIsSellSign(Boolean.FALSE);
+        }
+
+        if (event.getBuyPrice() != null && event.getBuyPrice().doubleValue() != -1.0) {
+            sign.setBuyPrice(event.getBuyPrice().doubleValue());
+            sign.setBuyPriceEach(determineBuyPriceEach(event.getQuantity(), event.getBuyPrice().doubleValue()));
+            sign.setIsBuySign(Boolean.TRUE);
+        } else {
+            sign.setBuyPrice(null);
+            sign.setBuyPriceEach(null);
+            sign.setIsBuySign(Boolean.FALSE);
+        }
+
+        sign.setMaterial(event.getItem().toLowerCase());
+
+        sign.setIsHidden(sign.getTown() == null || !sign.getTown().getActive());
+        sign.setIsFull(event.getFull());
+        sign.setIsSellSign(sign.getSellPrice() != null);
+
+        return sign;
     }
 
     public List<String> getChestShopSignMaterialNames(Server server, TradeType tradeType) {
@@ -151,7 +253,8 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
     }
 
     public List<String> getChestShopSignMaterialNames(Server server) {
-        return server == null ? chestShopSignRepository.findDistinctMaterials() : chestShopSignRepository.findDistinctMaterialsByServer(server.name());
+        return server == null ? chestShopSignRepository.findDistinctMaterials() :
+                chestShopSignRepository.findDistinctMaterialsByServer(server.name());
     }
 
     private List<ChestShopSignDto> mapSigns(List<ChestShopSign> signs) {
@@ -174,62 +277,25 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             result.setSellPrice(sign.getSellPrice());
         }
 
+        result.setFull(sign.getIsFull());
         result.setMaterial(sign.getMaterial());
         return result;
     }
 
-    private ChestShopSign mapDTOToSign(List<ChestShopSign> signs, Sign sign, Player owner, Region region) {
-        ChestShopSign chestShopSign = new ChestShopSign();
-
-        // Basic Info
-        chestShopSign.setOwner(owner);
-        chestShopSign.setTown(region);
-        chestShopSign.setLocation(sign.getLocation());
-        chestShopSign.setServer(region.getServer());
-
-        // Quantity and Count
-        QuantityLine quantityLine = parseQuantityLine(sign.getQuantityLine());
-        chestShopSign.setQuantity(quantityLine.getQuantity());
-        chestShopSign.setCount(quantityLine.getCount());
-
-        // Material
-        chestShopSign.setMaterial(sign.getMaterialLine().toLowerCase().replace("_", " "));
-
-        // Buy Price / Sell Price
-        Prices prices = ChestShopSignValidator.determinePrices(sign.getPriceLine());
-        chestShopSign.setBuyPrice(prices.getBuyPrice());
-        chestShopSign.setSellPrice(prices.getSellPrice());
-        chestShopSign.setBuyPriceEach(determineBuyPriceEach(quantityLine.getQuantity(), prices.getBuyPrice()));
-        chestShopSign.setSellPriceEach(determineSellPriceEach(quantityLine.getQuantity(), prices.getSellPrice()));
-
-        // Is Buy Sign / Is Sell Sign / Is Unique
-        chestShopSign.setIsBuySign(prices.getBuyPrice() != null);
-        chestShopSign.setIsSellSign(prices.getSellPrice() != null);
-        chestShopSign.setIsDistinct(!signs.contains(chestShopSign));
-
-        return chestShopSign;
-    }
-
-    private QuantityLine parseQuantityLine(String quantityLine) {
-        int quantity = Integer.parseInt(quantityLine.split(":")[0].replace("Q ", "").trim());
-        int count = Integer.parseInt(quantityLine.split(":")[1].replace("C ", "").trim());
-        return new QuantityLine(quantity, count);
-    }
-
     private Double determineSellPriceEach(Integer quantity, Double sellPrice) {
-        if (quantity == null || sellPrice == null) {
-            return null;
-        }
-
-        return sellPrice / quantity;
+        return quantity == null || sellPrice == null ? null : sellPrice / quantity;
     }
 
     private Double determineBuyPriceEach(Integer quantity, Double buyPrice) {
-        if (quantity == null || buyPrice == null) {
-            return null;
-        }
+        return quantity == null || buyPrice == null ? null : buyPrice / quantity;
+    }
 
-        return buyPrice / quantity;
+    private Sort getSort(SortBy sortBy, TradeType tradeType) {
+        if (sortBy == SortBy.BEST_PRICE && tradeType == TradeType.BUY) return Sort.by("buyPriceEach").ascending();
+        if (sortBy == SortBy.BEST_PRICE && tradeType == TradeType.SELL) return Sort.by("sellPriceEach").descending();
+        if (sortBy == SortBy.QUANTITY) return Sort.by("quantity").descending();
+        if (sortBy == SortBy.MATERIAL) return Sort.by("material").ascending();
+        return Sort.by("count").descending();
     }
 
     @Autowired
