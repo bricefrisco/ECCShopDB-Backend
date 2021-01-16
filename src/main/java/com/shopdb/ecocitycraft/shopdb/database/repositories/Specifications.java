@@ -11,6 +11,8 @@ import com.shopdb.ecocitycraft.shopdb.models.signs.SignParams;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,8 +98,12 @@ public class Specifications {
             }
 
             if (params.getRegionName() != null && params.getServer() != null) {
-                conditions.add(builder.equal(player.join("towns").get("name"), params.getRegionName().toLowerCase()));
-                conditions.add(builder.equal(player.join("towns").get("server"), params.getServer()));
+                Join<Player, Region> region = player.join("towns", JoinType.INNER);
+
+                Predicate a = builder.equal(region.get("server"), params.getServer());
+                Predicate b = builder.equal(region.get("name"), params.getRegionName().toLowerCase());
+
+                conditions.add(builder.and(a, b));
             }
 
             return builder.and(conditions.toArray(new Predicate[0]));
