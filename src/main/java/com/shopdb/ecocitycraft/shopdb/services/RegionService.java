@@ -58,15 +58,100 @@ public class RegionService implements ErrorReasonConstants {
         return mapRegionResponse(findRegionByServerAndName(server, name));
     }
 
+    public Region findRegionByServerAndName(Server server, String name) {
+        Region region = repository.findOneByServerAndNameIgnoreCase(server, name);
+        if (region == null) {
+            throw new NotFoundException(String.format(RESOURCE_NOT_FOUND_BY_NAME, "Region", name));
+        }
+        return region;
+    }
+
+    public List<String> getRegionNames(Server server, boolean active) {
+        if (server == null) {
+            return active ? repository.findActiveRegionNames() : repository.findAllRegionNames();
+        }
+
+        return active ? repository.findActiveRegionNamesByServer(server.name()) : repository.findAllRegionsNamesByServer(server.name());
+    }
+
     public RegionResponse createRegion(RegionRequest request) {
         if (regionExists(request.getServer(), request.getName())) {
             throw new AlreadyExistentException(String.format(RESOURCE_ALREADY_EXISTS, "Region", request.getName()));
         }
 
-        Region region = mapRegionRequest(request);
+        Region conflictingRegion = findByLocations(request.getIBounds(), request.getOBounds(), request.getServer());
+        if (conflictingRegion != null) {
+            throw new AlreadyExistentException("Region " + conflictingRegion.getName() +
+                    " conflicts - these coordinates overlap.");
+        }
+
+        Region region = new Region();
+        region.setName(request.getName().toLowerCase());
+        region.setServer(request.getServer());
+
+        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
+        region.setIBounds(bounds.getLowerBounds());
+        region.setOBounds(bounds.getUpperBounds());
+
+        HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
+        region.setMayors(new ArrayList<>(players.values()));
+
+        region.setActive(Boolean.FALSE);
+
         repository.saveAndFlush(region);
         linkChestShopSigns(region);
         return mapRegionResponse(region);
+    }
+
+    public RegionResponse updateRegion(RegionRequest request) {
+        Region region = findRegionByServerAndName(request.getServer(), request.getName());
+
+        region.setServer(request.getServer());
+
+        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
+        region.setIBounds(bounds.getLowerBounds());
+        region.setOBounds(bounds.getUpperBounds());
+
+        HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
+        region.setMayors(new ArrayList<>(players.values()));
+
+        repository.saveAndFlush(region);
+        return mapRegionResponse(region);
+    }
+
+    public RegionResponse updateRegionActive(Server server, String name, boolean active) {
+        Region region = findRegionByServerAndName(server, name);
+
+        if (active) {
+            region.setActive(true);
+            unHideChestShopSigns(region);
+        } else {
+            region.setActive(false);
+            hideChestShopSigns(region);
+        }
+
+        repository.saveAndFlush(region);
+        return mapRegionResponse(region);
+    }
+
+    public RegionResponse mapRegionResponse(Region region) {
+        RegionResponse response = new RegionResponse();
+        response.setId(region.getId());
+        response.setName(region.getName());
+        response.setServer(region.getServer());
+        response.setIBounds(region.getIBounds());
+        response.setOBounds(region.getOBounds());
+        response.setActive(region.getActive());
+        response.setMayors(mapMayors(region));
+
+        if (region.getChestShopSigns() != null) {
+            response.setNumChestShops(region.getChestShopSigns().size());
+        } else {
+            response.setNumChestShops(0);
+        }
+
+        response.setLastUpdated(region.getLastUpdated());
+        return response;
     }
 
     private void linkChestShopSigns(Region region) {
@@ -115,69 +200,6 @@ public class RegionService implements ErrorReasonConstants {
         chestShopSignRepository.saveAll(chestShopSigns);
     }
 
-    public RegionResponse updateRegion(RegionRequest request) {
-        Region region = findRegionByServerAndName(request.getServer(), request.getName());
-
-        region.setServer(request.getServer());
-
-        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
-        region.setIBounds(bounds.getLowerBounds());
-        region.setOBounds(bounds.getUpperBounds());
-
-        HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
-        region.setMayors(new ArrayList<>(players.values()));
-
-        repository.saveAndFlush(region);
-        return mapRegionResponse(region);
-    }
-
-    public RegionResponse updateRegionActive(Server server, String name, boolean active) {
-        Region region = findRegionByServerAndName(server, name);
-
-        if (active) {
-            region.setActive(true);
-            unHideChestShopSigns(region);
-        } else {
-            region.setActive(false);
-            hideChestShopSigns(region);
-        }
-
-        repository.saveAndFlush(region);
-        return mapRegionResponse(region);
-    }
-
-    public Region findRegionByServerAndName(Server server, String name) {
-        Region region = repository.findOneByServerAndNameIgnoreCase(server, name);
-        if (region == null) {
-            throw new NotFoundException(String.format(RESOURCE_NOT_FOUND_BY_NAME, "Region", name));
-        }
-        return region;
-    }
-
-    public List<String> getRegionNames(Server server, boolean active) {
-        if (server == null) {
-            return active ? repository.findActiveRegionNames() : repository.findAllRegionNames();
-        }
-
-        return active ? repository.findActiveRegionNamesByServer(server.name()) : repository.findAllRegionsNamesByServer(server.name());
-    }
-
-    private Region mapRegionRequest(RegionRequest request) {
-        Region region = new Region();
-        region.setName(request.getName().toLowerCase());
-        region.setServer(request.getServer());
-
-        Bounds bounds = sort(request.getIBounds(), request.getOBounds());
-        region.setIBounds(bounds.getLowerBounds());
-        region.setOBounds(bounds.getUpperBounds());
-
-        HashMap<String, Player> players = playerService.getOrAddPlayers(new HashSet<>(request.getMayorNames()));
-        region.setMayors(new ArrayList<>(players.values()));
-
-        region.setActive(request.getActive());
-        return region;
-    }
-
     private Bounds sort(Location l1, Location l2) {
         Location lowerBounds = new Location();
         Location upperBounds = new Location();
@@ -209,28 +231,8 @@ public class RegionService implements ErrorReasonConstants {
         return new Bounds(lowerBounds, upperBounds);
     }
 
-    public List<String> mapMayors(Region region) {
+    private List<String> mapMayors(Region region) {
         return region.getMayors().stream().map(Player::getName).collect(Collectors.toList());
-    }
-
-    public RegionResponse mapRegionResponse(Region region) {
-        RegionResponse response = new RegionResponse();
-        response.setId(region.getId());
-        response.setName(region.getName());
-        response.setServer(region.getServer());
-        response.setIBounds(region.getIBounds());
-        response.setOBounds(region.getOBounds());
-        response.setActive(region.getActive());
-        response.setMayors(mapMayors(region));
-
-        if (region.getChestShopSigns() != null) {
-            response.setNumChestShops(region.getChestShopSigns().size());
-        } else {
-            response.setNumChestShops(0);
-        }
-
-        response.setLastUpdated(region.getLastUpdated());
-        return response;
     }
 
     public Region findByCoordinates(int x, int y, int z, String server) {
@@ -239,6 +241,12 @@ public class RegionService implements ErrorReasonConstants {
 
     private boolean regionExists(Server server, String name) {
         return !(repository.findOneByServerAndNameIgnoreCase(server, name) == null);
+    }
+
+    private Region findByLocations(Location iBounds, Location oBounds, Server server) {
+        Region region = findByCoordinates(iBounds.getX(), iBounds.getY(), iBounds.getZ(), server.name());
+        if (region != null) return region;
+        return findByCoordinates(oBounds.getX(), oBounds.getY(), oBounds.getZ(), server.name());
     }
 
     @Autowired
