@@ -6,26 +6,28 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @ToString
 public class RegionRequest {
-    @NotBlank
     private String name;
-    @NotNull
-    private Server server;
-    @NotNull
-    @JsonProperty("iBounds")
+    private String server;
+    @JsonProperty("iBounds") // override lombok getters/setters, needed for JSON parsing.
     private Location iBounds;
-    @NotNull
     @JsonProperty("oBounds")
     private Location oBounds;
-    @NotNull
-    private List<String> mayorNames;
+    @JsonProperty("owners")
+    private Set<String> mayorNames;
     private Boolean active = false;
+
+    public Location getiBounds() {
+        return iBounds;
+    }
+
+    public Location getoBounds() {
+        return oBounds;
+    }
 }
