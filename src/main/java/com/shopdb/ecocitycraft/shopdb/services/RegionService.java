@@ -123,20 +123,10 @@ public class RegionService implements ErrorReasonConstants {
             }
 
             region.setLastUpdated(new Timestamp(System.currentTimeMillis()));
+
+            repository.saveAndFlush(region);
         }
 
-        if (updates.size() > 0) {
-            LOGGER.info("Updating " + updates.size() + " existing regions.");
-            repository.saveAll(updates);
-        }
-
-        if (inserts.size() == 0) {
-            String response = "Successfully updated " + updates.size() + " regions, and inserted 0 regions.";
-            LOGGER.info(response);
-            return response;
-        }
-
-        repository.saveAll(inserts);
         for (Region region : inserts) {
             linkChestShopSigns(region);
         }
