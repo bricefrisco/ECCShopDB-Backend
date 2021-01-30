@@ -66,7 +66,7 @@ jobs:
 
       - run:
           name: Deploy to server
-          command: ssh -o StrictHostKeyChecking=no $HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend-test $CIRCLE_BUILD_NUM $TEST_DOCKER_ENV_ARGS"
+          command: ssh -o StrictHostKeyChecking=no $TEST_HOST "/usr/local/sbin/upgrade-docker-image.sh bricefrisco/eccshopdb-backend-test $CIRCLE_BUILD_NUM $TEST_DOCKER_ENV_ARGS"
 
   build:
     docker:
