@@ -34,12 +34,6 @@ public class RegionController {
         return regionService.getRegions(regionsParams);
     }
 
-    @GetMapping("/region-names")
-    public List<String> getRegionNames(@RequestParam(required = false) Server server,
-                                       @RequestParam(required = false, defaultValue = "true") boolean active) {
-        return regionService.getRegionNames(server, active);
-    }
-
     @GetMapping("/{server}/{name}")
     public RegionResponse getRegion(@PathVariable Server server, @PathVariable String name, @RequestParam(required = false, defaultValue = "true") boolean sendAnalytics) {
         RegionResponse response = regionService.getRegion(server, name);
@@ -50,13 +44,8 @@ public class RegionController {
     }
 
     @PostMapping
-    public RegionResponse createRegion(@Valid @RequestBody RegionRequest regionRequest) {
-        return regionService.createRegion(regionRequest);
-    }
-
-    @PutMapping
-    public RegionResponse updateRegion(@Valid @RequestBody RegionRequest regionRequest) {
-        return regionService.updateRegion(regionRequest);
+    public String processRegions(@RequestBody List<RegionRequest> regionRequests) {
+        return regionService.processRegions(regionRequests);
     }
 
     @PutMapping("/{server}/{name}")
@@ -66,5 +55,12 @@ public class RegionController {
             @RequestParam("active") boolean active
     ) {
         return regionService.updateRegionActive(server, name, active);
+    }
+
+
+    @GetMapping("/region-names")
+    public List<String> getRegionNames(@RequestParam(required = false) Server server,
+                                       @RequestParam(required = false, defaultValue = "true") boolean active) {
+        return regionService.getRegionNames(server, active);
     }
 }

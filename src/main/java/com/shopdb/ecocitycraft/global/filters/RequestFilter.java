@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 
@@ -35,6 +37,7 @@ public class RequestFilter extends BasicAuthenticationFilter {
     private static final String HEADER_STRING = "Authorization";
     private final JWTConfiguration jwtConfig;
     private final AuthenticationService authenticationService;
+    private static final ArrayList<String> API_URLS = new ArrayList<>(Arrays.asList("/api/v3/chest-shops", "/api/v3/regions"));
 
     public RequestFilter(AuthenticationManager authManager, JWTConfiguration jwtConfig, AuthenticationService authenticationService) {
         super(authManager);
@@ -58,7 +61,7 @@ public class RequestFilter extends BasicAuthenticationFilter {
         }
 
         // Allow use of an API key for POSTing chest shops for updates
-        if (request.getMethod().equals(HttpMethod.POST.name()) && request.getRequestURI().equals("/api/v3/chest-shops")) {
+        if (request.getMethod().equals(HttpMethod.POST.name()) && API_URLS.contains(request.getRequestURI())) {
             if (token == null || !authenticationService.apiKeyValid(token)) {
                 sendExceptionResponse("Unauthorized", response);
                 return;
