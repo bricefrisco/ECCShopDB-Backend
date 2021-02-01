@@ -34,11 +34,11 @@ public interface RegionRepository extends JpaRepository<Region, Long>, JpaSpecif
             "i_x <= :x AND o_x >= :x AND " +
             "i_y <= :y AND o_y >= :y AND " +
             "i_z <= :z AND o_z >= :z", nativeQuery = true)
-    Region findByCoordinates(@Param("x") int x, @Param("y") int y, @Param("z") int z, @Param("server") String server);
+    List<Region> findByCoordinates(@Param("x") int x, @Param("y") int y, @Param("z") int z, @Param("server") String server);
 
     @Query(value = " SELECT * FROM region WHERE " +
             "server = :server AND " +
             "i_x >= :ix AND o_x <= :ox AND " +
             "i_z >= :iz AND o_z <= :oz", nativeQuery = true)
-    Region findRegionsInCoordinates(@Param("ix") int ix, @Param("ox") int ox, @Param("iz") int iz, @Param("oz") int oz, @Param("server") String server);
+    List<Region> findRegionsInCoordinates(@Param("ix") int ix, @Param("ox") int ox, @Param("iz") int iz, @Param("oz") int oz, @Param("server") String server);
 }

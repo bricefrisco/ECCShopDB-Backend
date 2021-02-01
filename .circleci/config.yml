@@ -9,10 +9,10 @@ workflows:
             branches:
               only: master
 
-      - build_test:
-          filters:
-            branches:
-              only: test
+#      - build_test:
+#          filters:
+#            branches:
+#              only: test
 
 jobs:
   build_test:

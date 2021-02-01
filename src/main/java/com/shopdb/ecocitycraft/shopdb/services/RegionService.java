@@ -102,7 +102,7 @@ public class RegionService implements ErrorReasonConstants {
 
                 region = new Region();
                 region.setActive(Boolean.FALSE);
-                region.setName(request.getName());
+                region.setName(request.getName().toLowerCase());
                 region.setServer(server);
 
                 inserts.add(region);
@@ -184,15 +184,15 @@ public class RegionService implements ErrorReasonConstants {
     }
 
     private boolean hasConflictingRegion(String name, Location iBounds, Location oBounds, Server server) {
-        Region conflictingRegion = findByLocations(iBounds, oBounds, server);
-        if (conflictingRegion != null) {
-            LOGGER.warn("Region " + name + " conflicts with " + conflictingRegion.getName() + " on " + server.name() + " - these coordinates overlap.");
+        List<Region> conflictingRegions = findByLocations(iBounds, oBounds, server);
+        if (conflictingRegions != null && conflictingRegions.size() > 0) {
+            LOGGER.warn("Region " + name + " conflicts with " + conflictingRegions.toString() + " on " + server.name() + " - these coordinates overlap.");
             return true;
         }
 
-        conflictingRegion = findRegionsInCoordinates(iBounds, oBounds, server);
-        if (conflictingRegion != null) {
-            LOGGER.warn("Region " + name + " conflicts with " + conflictingRegion.getName() + " on " + server.name() + " - these coordinates overlap.");
+        conflictingRegions = findRegionsInCoordinates(iBounds, oBounds, server);
+        if (conflictingRegions != null && conflictingRegions.size() > 0) {
+            LOGGER.warn("Region " + name + " conflicts with " + conflictingRegions + " on " + server.name() + " - these coordinates overlap.");
             return true;
         }
 
@@ -315,17 +315,17 @@ public class RegionService implements ErrorReasonConstants {
         return region.getMayors().stream().map(Player::getName).collect(Collectors.toList());
     }
 
-    public Region findByCoordinates(int x, int y, int z, String server) {
+    public List<Region> findByCoordinates(int x, int y, int z, String server) {
         return repository.findByCoordinates(x, y, z, server);
     }
 
-    private Region findByLocations(Location iBounds, Location oBounds, Server server) {
-        Region region = findByCoordinates(iBounds.getX(), iBounds.getY(), iBounds.getZ(), server.name());
-        if (region != null) return region;
+    private List<Region> findByLocations(Location iBounds, Location oBounds, Server server) {
+        List<Region> regions = findByCoordinates(iBounds.getX(), iBounds.getY(), iBounds.getZ(), server.name());
+        if (regions != null && regions.size() > 0) return regions;
         return findByCoordinates(oBounds.getX(), oBounds.getY(), oBounds.getZ(), server.name());
     }
 
-    private Region findRegionsInCoordinates(Location iBounds, Location oBounds, Server server) {
+    private List<Region> findRegionsInCoordinates(Location iBounds, Location oBounds, Server server) {
         return repository.findRegionsInCoordinates(iBounds.getX(), oBounds.getX(), iBounds.getZ(), oBounds.getZ(), server.name());
     }
 

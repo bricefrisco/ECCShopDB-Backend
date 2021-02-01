@@ -178,9 +178,9 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
                 break;
         }
 
-        Region region = regionService.findByCoordinates(event.getX(), event.getY(), event.getZ(), chestShopSign.getServer().name());
-        if (region != null) {
-            chestShopSign.setTown(region);
+        List<Region> regions = regionService.findByCoordinates(event.getX(), event.getY(), event.getZ(), chestShopSign.getServer().name());
+        if (regions != null && regions.size() > 0) {
+            chestShopSign.setTown(regions.get(0)); // TODO: Determine correct region or add many to many
         }
 
         Location location = new Location();
