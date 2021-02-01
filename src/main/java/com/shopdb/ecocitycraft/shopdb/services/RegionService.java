@@ -40,8 +40,6 @@ public class RegionService implements ErrorReasonConstants {
         servers.put("rising", Server.MAIN);
         servers.put("rising_n", Server.MAIN_NORTH);
         servers.put("rising_e", Server.MAIN_EAST);
-        // TODO: Remove
-        servers.put("world", Server.MAIN);
     }
 
     public PaginatedRegions getRegions(RegionsParams params) {
