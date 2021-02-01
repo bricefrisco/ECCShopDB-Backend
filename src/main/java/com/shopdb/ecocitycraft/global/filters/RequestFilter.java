@@ -60,7 +60,7 @@ public class RequestFilter extends BasicAuthenticationFilter {
             return;
         }
 
-        // Allow use of an API key for POSTing chest shops for updates
+        // Allow use of an API key for POSTing updates
         if (request.getMethod().equals(HttpMethod.POST.name()) && API_URLS.contains(request.getRequestURI())) {
             if (token == null || !authenticationService.apiKeyValid(token)) {
                 sendExceptionResponse("Unauthorized", response);
