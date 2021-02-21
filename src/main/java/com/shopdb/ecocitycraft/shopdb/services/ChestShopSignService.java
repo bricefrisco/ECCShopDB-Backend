@@ -215,11 +215,6 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
                 break;
         }
 
-        List<Region> regions = regionService.findByCoordinates(event.getX(), event.getY(), event.getZ(), chestShopSign.getServer().name());
-        if (regions != null && regions.size() > 0) {
-            chestShopSign.setTown(regions.get(0)); // TODO: Determine correct region or add many to many
-        }
-
         Location location = new Location();
         location.setX(event.getX());
         location.setY(event.getY());
@@ -252,6 +247,13 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
             sign.setBuyPrice(null);
             sign.setBuyPriceEach(null);
             sign.setIsBuySign(Boolean.FALSE);
+        }
+
+        if (sign.getTown() == null) {
+            List<Region> regions = regionService.findByCoordinates(event.getX(), event.getY(), event.getZ(), sign.getServer().name());
+            if (regions != null && regions.size() > 0) {
+                sign.setTown(regions.get(0)); // TODO: Determine correct region or add many to many
+            }
         }
 
         sign.setMaterial(event.getItem().toLowerCase());
