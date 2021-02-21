@@ -77,7 +77,6 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
         }
 
         for (List<ChestShopSignDto> samePrices : priceMap.values()) {
-            LOGGER.info(samePrices.toString());
             Collections.shuffle(samePrices);
             results.addAll(samePrices);
         }
