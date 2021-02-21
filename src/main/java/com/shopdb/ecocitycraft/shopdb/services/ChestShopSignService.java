@@ -8,6 +8,7 @@ import com.shopdb.ecocitycraft.shopdb.database.entities.enums.Server;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.SortBy;
 import com.shopdb.ecocitycraft.shopdb.database.entities.enums.TradeType;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSignRepository;
+import com.shopdb.ecocitycraft.shopdb.database.repositories.ChestShopSpecifications;
 import com.shopdb.ecocitycraft.shopdb.database.repositories.Specifications;
 import com.shopdb.ecocitycraft.shopdb.models.constants.ErrorReasonConstants;
 import com.shopdb.ecocitycraft.shopdb.models.constants.RegexConstants;
@@ -23,34 +24,71 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ChestShopSignService implements ErrorReasonConstants, RegexConstants {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChestShopSignService.class);
 
     private final ChestShopSignRepository chestShopSignRepository;
+    private final ChestShopSpecifications specifications;
     private PlayerService playerService;
     private RegionService regionService;
 
-    public ChestShopSignService(ChestShopSignRepository chestShopSignRepository) {
+    public ChestShopSignService(ChestShopSignRepository chestShopSignRepository, ChestShopSpecifications specifications) {
         this.chestShopSignRepository = chestShopSignRepository;
+        this.specifications = specifications;
     }
 
     public PaginatedChestShopSigns getSigns(SignParams params) {
         Sort sort = getSort(params.getSortBy(), params.getTradeType());
-        Specification<ChestShopSign> specification = Specifications.chestShopSpecification(params);
+
+        Specification<ChestShopSign> specification = specifications.chestShopSpecification(params);
         Pageable pageable = PageRequest.of(params.getPage() - 1, params.getPageSize(), sort);
 
-        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(specification, pageable);
 
+        Page<ChestShopSign> pageableResults = chestShopSignRepository.findAll(specification, pageable);
         List<ChestShopSignDto> results = mapSigns(pageableResults.getContent());
 
         return new PaginatedChestShopSigns(
                 params.getPage(),
                 pageableResults.getTotalPages(),
                 pageableResults.getTotalElements(),
-                results
+                shuffle(results, params.getTradeType())
         );
+    }
+
+    private List<ChestShopSignDto> shuffle(List<ChestShopSignDto> chestShopSignDtos, TradeType tradeType) {
+        List<ChestShopSignDto> results = new ArrayList<>();
+
+        HashMap<Double, List<ChestShopSignDto>> priceMap = new HashMap<>();
+
+        for (ChestShopSignDto dto : chestShopSignDtos) {
+            Double price = tradeType == TradeType.BUY ? dto.getBuyPriceEach() : dto.getSellPriceEach();
+
+            List<ChestShopSignDto> samePrices = priceMap.get(price);
+            if (samePrices == null) {
+                samePrices = new ArrayList<>();
+                samePrices.add(dto);
+                priceMap.put(price, samePrices);
+            } else {
+                samePrices.add(dto);
+            }
+        }
+
+        for (List<ChestShopSignDto> samePrices : priceMap.values()) {
+            LOGGER.info(samePrices.toString());
+            Collections.shuffle(samePrices);
+            results.addAll(samePrices);
+        }
+
+        return results.stream().sorted((a, b) -> {
+            if (tradeType == TradeType.BUY) {
+                return Double.compare(a.getBuyPriceEach(), b.getBuyPriceEach());
+            } else {
+                return Double.compare(b.getSellPriceEach(), a.getSellPriceEach());
+            }
+        }).collect(Collectors.toList());
     }
 
     public String processShopEvents(List<ShopEvent> shopEvents) {
@@ -272,9 +310,11 @@ public class ChestShopSignService implements ErrorReasonConstants, RegexConstant
 
         if (sign.getBuyPrice() != null) {
             result.setBuyPrice(sign.getBuyPrice());
+            result.setBuyPriceEach(sign.getBuyPriceEach());
         }
         if (sign.getSellPrice() != null) {
             result.setSellPrice(sign.getSellPrice());
+            result.setSellPriceEach(sign.getSellPriceEach());
         }
 
         result.setFull(sign.getIsFull());

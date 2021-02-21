@@ -26,4 +26,5 @@ public class SignParams {
     private String regionName;
     private String playerName;
     private boolean hideFull = false;
+    private boolean distinct = false;
 }
