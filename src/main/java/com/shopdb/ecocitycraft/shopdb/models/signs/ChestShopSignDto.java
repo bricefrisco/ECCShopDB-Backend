@@ -20,6 +20,8 @@ public class ChestShopSignDto {
     private int quantity;
     private int count;
     private double buyPrice;
+    private double buyPriceEach;
+    private double sellPriceEach;
     private double sellPrice;
     private boolean isFull;
     private String material;
